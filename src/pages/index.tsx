@@ -20,14 +20,13 @@ const initialEventForm = {
   location: "",
   mapLink: "",
   mapEmbed: "",
-  dateOption1: "",
-  dateOption2: "",
-  dateOption3: "",
+  arrivalDate: "",
+  departureDate: "",
 };
 
 function formatDate(value: string | null) {
   if (!value) {
-    return "No date options yet";
+    return "TBD";
   }
 
   return new Intl.DateTimeFormat("en-CA", {
@@ -78,9 +77,8 @@ export default function Home({ databaseReady, databaseMessage, groups, events, u
       location: event.location || "",
       mapLink: event.mapLink || "",
       mapEmbed: event.mapEmbed || "",
-      dateOption1: event.dateOptions[0] ? isoToDatetimeLocal(event.dateOptions[0]) : "",
-      dateOption2: event.dateOptions[1] ? isoToDatetimeLocal(event.dateOptions[1]) : "",
-      dateOption3: event.dateOptions[2] ? isoToDatetimeLocal(event.dateOptions[2]) : "",
+      arrivalDate: event.arrivalDate ? isoToDatetimeLocal(event.arrivalDate) : "",
+      departureDate: event.departureDate ? isoToDatetimeLocal(event.departureDate) : "",
     });
     setEditState({ loading: false, error: null });
   }
@@ -243,7 +241,7 @@ export default function Home({ databaseReady, databaseMessage, groups, events, u
           </article>
           <article className="stat-card">
             <span>Next meetup</span>
-            <strong>{events[0] ? formatDate(events[0].nextDate) : "None scheduled"}</strong>
+            <strong>{events[0] ? formatDate(events[0].arrivalDate) : "None scheduled"}</strong>
           </article>
         </section>
 
@@ -360,41 +358,28 @@ export default function Home({ databaseReady, databaseMessage, groups, events, u
                 </label>
                 <div className="date-grid">
                   <label>
-                    Date option 1
+                    Arrival
                     <input
                       type="datetime-local"
-                      value={eventForm.dateOption1}
+                      value={eventForm.arrivalDate}
                       onChange={(event) =>
                         setEventForm((current) => ({
                           ...current,
-                          dateOption1: event.target.value,
+                          arrivalDate: event.target.value,
                         }))
                       }
                       required
                     />
                   </label>
                   <label>
-                    Date option 2
+                    Departure
                     <input
                       type="datetime-local"
-                      value={eventForm.dateOption2}
+                      value={eventForm.departureDate}
                       onChange={(event) =>
                         setEventForm((current) => ({
                           ...current,
-                          dateOption2: event.target.value,
-                        }))
-                      }
-                    />
-                  </label>
-                  <label>
-                    Date option 3
-                    <input
-                      type="datetime-local"
-                      value={eventForm.dateOption3}
-                      onChange={(event) =>
-                        setEventForm((current) => ({
-                          ...current,
-                          dateOption3: event.target.value,
+                          departureDate: event.target.value,
                         }))
                       }
                     />
@@ -419,8 +404,7 @@ export default function Home({ databaseReady, databaseMessage, groups, events, u
               <div className="event-list">
                 {events.length === 0 ? (
                   <p className="empty-state">
-                    No meetups yet. Create a group first, then add your first event with one or
-                    more date options.
+                    No meetups yet. Create a group first, then add your first event.
                   </p>
                 ) : (
                   events.map((event) => (
@@ -455,19 +439,18 @@ export default function Home({ databaseReady, databaseMessage, groups, events, u
                       {event.description ? <p>{event.description}</p> : null}
                       <dl className="event-meta">
                         <div>
-                          <dt>Next option</dt>
-                          <dd>{formatDate(event.nextDate)}</dd>
+                          <dt>Arrival</dt>
+                          <dd>{formatDate(event.arrivalDate)}</dd>
+                        </div>
+                        <div>
+                          <dt>Departure</dt>
+                          <dd>{event.departureDate ? formatDate(event.departureDate) : "TBD"}</dd>
                         </div>
                         <div>
                           <dt>Location</dt>
                           <dd>{event.location || "TBD"}</dd>
                         </div>
                       </dl>
-                      <ul className="date-list">
-                        {event.dateOptions.map((date) => (
-                          <li key={date}>{formatDate(date)}</li>
-                        ))}
-                      </ul>
                       {event.mapLink ? (
                         <a href={event.mapLink} target="_blank" rel="noreferrer">
                           Open map ↗
@@ -604,33 +587,23 @@ export default function Home({ databaseReady, databaseMessage, groups, events, u
               </label>
               <div className="date-grid">
                 <label>
-                  Date option 1
+                  Arrival
                   <input
                     type="datetime-local"
-                    value={editEventForm.dateOption1}
+                    value={editEventForm.arrivalDate}
                     onChange={(e) =>
-                      setEditEventForm((f) => ({ ...f, dateOption1: e.target.value }))
+                      setEditEventForm((f) => ({ ...f, arrivalDate: e.target.value }))
                     }
                     required
                   />
                 </label>
                 <label>
-                  Date option 2
+                  Departure
                   <input
                     type="datetime-local"
-                    value={editEventForm.dateOption2}
+                    value={editEventForm.departureDate}
                     onChange={(e) =>
-                      setEditEventForm((f) => ({ ...f, dateOption2: e.target.value }))
-                    }
-                  />
-                </label>
-                <label>
-                  Date option 3
-                  <input
-                    type="datetime-local"
-                    value={editEventForm.dateOption3}
-                    onChange={(e) =>
-                      setEditEventForm((f) => ({ ...f, dateOption3: e.target.value }))
+                      setEditEventForm((f) => ({ ...f, departureDate: e.target.value }))
                     }
                   />
                 </label>
@@ -898,7 +871,7 @@ export default function Home({ databaseReady, databaseMessage, groups, events, u
         }
 
         .date-grid {
-          grid-template-columns: repeat(3, minmax(0, 1fr));
+          grid-template-columns: repeat(2, minmax(0, 1fr));
         }
 
         .event-list,
@@ -952,7 +925,7 @@ export default function Home({ databaseReady, databaseMessage, groups, events, u
 
         .event-meta {
           display: grid;
-          grid-template-columns: repeat(2, minmax(0, 1fr));
+          grid-template-columns: repeat(3, minmax(0, 1fr));
           gap: 10px;
           margin: 14px 0;
         }
@@ -965,12 +938,6 @@ export default function Home({ databaseReady, databaseMessage, groups, events, u
 
         .event-meta dd {
           margin: 0;
-        }
-
-        .date-list {
-          margin: 0 0 12px;
-          padding-left: 18px;
-          color: #d4d0c7;
         }
 
         .map-embed {
@@ -1042,6 +1009,10 @@ export default function Home({ databaseReady, databaseMessage, groups, events, u
           .event-meta,
           .modal-actions {
             grid-template-columns: 1fr;
+          }
+
+          .event-meta {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
           }
         }
       `}</style>

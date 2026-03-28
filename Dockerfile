@@ -7,4 +7,4 @@ COPY . .
 RUN npm run prisma:generate
 RUN npm run build
 EXPOSE 3000
-CMD ["sh", "-lc", "HOST_IP=$(hostname -i | awk '{print $1}') && npx next start -H \"$HOST_IP\" -p 3000"]
+CMD ["sh", "-lc", "npx prisma migrate deploy && HOST_IP=$(hostname -i | awk '{print $1}') && npx next start -H \"$HOST_IP\" -p 3000"]

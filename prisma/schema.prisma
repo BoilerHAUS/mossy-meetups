@@ -76,25 +76,18 @@ model Group {
 }
 
 model Event {
-  id          String       @id @default(uuid())
-  groupId     String
-  group       Group        @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  title       String
-  description String?
-  location    String?
-  mapLink     String?
-  mapEmbed    String?
-  dateOptions DateOption[]
-  rsvps       RSVP[]
-  createdAt   DateTime     @default(now())
-}
-
-model DateOption {
-  id        String   @id @default(uuid())
-  eventId   String
-  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  date      DateTime
-  createdAt DateTime @default(now())
+  id            String    @id @default(uuid())
+  groupId       String
+  group         Group     @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  title         String
+  description   String?
+  location      String?
+  mapLink       String?
+  mapEmbed      String?
+  arrivalDate   DateTime?
+  departureDate DateTime?
+  rsvps         RSVP[]
+  createdAt     DateTime  @default(now())
 }
 
 model RSVP {

@@ -10,17 +10,14 @@ type UpdateEventPayload = {
   location?: string;
   mapLink?: string;
   mapEmbed?: string;
-  dateOption1?: string;
-  dateOption2?: string;
-  dateOption3?: string;
+  arrivalDate?: string;
+  departureDate?: string;
 };
 
-function parseDateOptions(payload: UpdateEventPayload) {
-  return [payload.dateOption1, payload.dateOption2, payload.dateOption3]
-    .map((v) => v?.trim())
-    .filter(Boolean)
-    .map((v) => new Date(v as string))
-    .filter((d) => !Number.isNaN(d.getTime()));
+function parseDate(value?: string): Date | null {
+  if (!value?.trim()) return null;
+  const date = new Date(value.trim());
+  return Number.isNaN(date.getTime()) ? null : date;
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -64,10 +61,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ error: "Event title is required" });
     }
 
-    const dateOptions = parseDateOptions(payload);
-    if (dateOptions.length === 0) {
-      return res.status(400).json({ error: "At least one valid date option is required" });
+    const arrivalDate = parseDate(payload.arrivalDate);
+    if (!arrivalDate) {
+      return res.status(400).json({ error: "Arrival date is required" });
     }
+
+    const departureDate = parseDate(payload.departureDate);
 
     const updated = await prisma.event.update({
       where: { id },
@@ -77,12 +76,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         location: payload.location?.trim() || null,
         mapLink: payload.mapLink?.trim() || null,
         mapEmbed: payload.mapEmbed?.trim() || null,
-        dateOptions: {
-          deleteMany: {},
-          create: dateOptions.map((date) => ({ date })),
-        },
+        arrivalDate,
+        departureDate,
       },
-      include: { dateOptions: true },
     });
 
     return res.status(200).json({ success: true, data: updated });

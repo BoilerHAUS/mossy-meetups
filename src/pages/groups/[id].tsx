@@ -10,7 +10,7 @@ import { getPrismaClient } from "../../lib/prisma";
 type Props = InferGetServerSidePropsType<typeof getServerSideProps>;
 
 function formatDate(value: string | null) {
-  if (!value) return "No date yet";
+  if (!value) return "TBD";
   return new Intl.DateTimeFormat("en-CA", {
     dateStyle: "medium",
     timeStyle: "short",
@@ -87,8 +87,12 @@ export default function GroupPage({ group, isAdmin, userId }: Props) {
                         </div>
                         <dl className="event-meta">
                           <div>
-                            <dt>Next option</dt>
-                            <dd>{formatDate(event.nextDate)}</dd>
+                            <dt>Arrival</dt>
+                            <dd>{formatDate(event.arrivalDate)}</dd>
+                          </div>
+                          <div>
+                            <dt>Departure</dt>
+                            <dd>{event.departureDate ? formatDate(event.departureDate) : "TBD"}</dd>
                           </div>
                           <div>
                             <dt>Location</dt>
@@ -316,7 +320,7 @@ export default function GroupPage({ group, isAdmin, userId }: Props) {
 
         .event-meta {
           display: grid;
-          grid-template-columns: 1fr 1fr;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
           gap: 10px;
           margin: 0 0 10px;
         }
@@ -488,7 +492,6 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       admin: true,
       events: {
         include: {
-          dateOptions: { orderBy: { date: "asc" } },
           _count: { select: { rsvps: true } },
         },
         orderBy: { createdAt: "desc" },
@@ -554,7 +557,8 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
           mapLink: event.mapLink,
           mapEmbed: event.mapEmbed,
           rsvpCount: event._count.rsvps,
-          nextDate: event.dateOptions[0]?.date.toISOString() || null,
+          arrivalDate: event.arrivalDate?.toISOString() || null,
+          departureDate: event.departureDate?.toISOString() || null,
         })),
       },
     },

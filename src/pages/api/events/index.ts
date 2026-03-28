@@ -11,17 +11,14 @@ type CreateEventPayload = {
   location?: string;
   mapLink?: string;
   mapEmbed?: string;
-  dateOption1?: string;
-  dateOption2?: string;
-  dateOption3?: string;
+  arrivalDate?: string;
+  departureDate?: string;
 };
 
-function parseDateOptions(payload: CreateEventPayload) {
-  return [payload.dateOption1, payload.dateOption2, payload.dateOption3]
-    .map((value) => value?.trim())
-    .filter(Boolean)
-    .map((value) => new Date(value as string))
-    .filter((date) => !Number.isNaN(date.getTime()));
+function parseDate(value?: string): Date | null {
+  if (!value?.trim()) return null;
+  const date = new Date(value.trim());
+  return Number.isNaN(date.getTime()) ? null : date;
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -40,7 +37,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   const payload = req.body as CreateEventPayload;
-  const dateOptions = parseDateOptions(payload);
 
   if (!payload.groupId?.trim()) {
     return res.status(400).json({ error: "Group is required" });
@@ -50,9 +46,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(400).json({ error: "Event title is required" });
   }
 
-  if (dateOptions.length === 0) {
-    return res.status(400).json({ error: "At least one valid date option is required" });
+  const arrivalDate = parseDate(payload.arrivalDate);
+  if (!arrivalDate) {
+    return res.status(400).json({ error: "Arrival date is required" });
   }
+
+  const departureDate = parseDate(payload.departureDate);
 
   try {
     const prisma = getPrismaClient();
@@ -69,12 +68,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         location: payload.location?.trim() || null,
         mapLink: payload.mapLink?.trim() || null,
         mapEmbed: payload.mapEmbed?.trim() || null,
-        dateOptions: {
-          create: dateOptions.map((date) => ({ date })),
-        },
-      },
-      include: {
-        dateOptions: true,
+        arrivalDate,
+        departureDate,
       },
     });
 

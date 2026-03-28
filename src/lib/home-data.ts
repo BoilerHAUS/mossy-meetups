@@ -19,8 +19,8 @@ type HomeEvent = {
   groupId: string;
   groupAdminId: string;
   groupName: string;
-  nextDate: string | null;
-  dateOptions: string[];
+  arrivalDate: string | null;
+  departureDate: string | null;
   rsvpCount: number;
 };
 
@@ -64,11 +64,6 @@ export async function getHomePageData(userId: string): Promise<HomePageData> {
         admin: true,
         events: {
           include: {
-            dateOptions: {
-              orderBy: {
-                date: "asc",
-              },
-            },
             _count: {
               select: {
                 rsvps: true,
@@ -106,25 +101,18 @@ export async function getHomePageData(userId: string): Promise<HomePageData> {
           groupId: group.id,
           groupAdminId: group.adminId,
           groupName: group.name,
-          nextDate: event.dateOptions[0]?.date.toISOString() || null,
-          dateOptions: event.dateOptions.map((option) => option.date.toISOString()),
+          arrivalDate: event.arrivalDate?.toISOString() || null,
+          departureDate: event.departureDate?.toISOString() || null,
           rsvpCount: event._count.rsvps,
         })),
       )
       .sort((left, right) => {
-        if (!left.nextDate && !right.nextDate) {
+        if (!left.arrivalDate && !right.arrivalDate) {
           return left.title.localeCompare(right.title);
         }
-
-        if (!left.nextDate) {
-          return 1;
-        }
-
-        if (!right.nextDate) {
-          return -1;
-        }
-
-        return left.nextDate.localeCompare(right.nextDate);
+        if (!left.arrivalDate) return 1;
+        if (!right.arrivalDate) return -1;
+        return left.arrivalDate.localeCompare(right.arrivalDate);
       });
 
     return {

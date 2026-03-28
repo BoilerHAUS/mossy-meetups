@@ -643,12 +643,11 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   const session = await getServerSession(context.req, context.res, authOptions);
 
   if (!session) {
-    return {
-      redirect: {
-        destination: "/login",
-        permanent: false,
-      },
-    };
+    return { redirect: { destination: "/login", permanent: false } };
+  }
+
+  if (!session.user.name) {
+    return { redirect: { destination: "/profile", permanent: false } };
   }
 
   const data = await getHomePageData();

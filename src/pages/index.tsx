@@ -1,7 +1,9 @@
+import { getServerSession } from "next-auth/next";
 import type { GetServerSideProps, InferGetServerSidePropsType } from "next";
 import Head from "next/head";
 import { FormEvent, useState } from "react";
 
+import { authOptions } from "../lib/auth";
 import { getHomePageData } from "../lib/home-data";
 
 type Props = InferGetServerSidePropsType<typeof getServerSideProps>;
@@ -637,7 +639,18 @@ export default function Home({ databaseReady, databaseMessage, groups, events }:
   );
 }
 
-export const getServerSideProps: GetServerSideProps = async () => {
+export const getServerSideProps: GetServerSideProps = async (context) => {
+  const session = await getServerSession(context.req, context.res, authOptions);
+
+  if (!session) {
+    return {
+      redirect: {
+        destination: "/login",
+        permanent: false,
+      },
+    };
+  }
+
   const data = await getHomePageData();
 
   return {

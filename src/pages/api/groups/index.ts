@@ -4,12 +4,6 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { authOptions } from "../../../lib/auth";
 import { getPrismaClient, hasDatabaseUrl } from "../../../lib/prisma";
 
-type CreateGroupPayload = {
-  name?: string;
-  adminEmail?: string;
-  adminName?: string;
-};
-
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
@@ -25,14 +19,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(503).json({ error: "DATABASE_URL is not configured" });
   }
 
-  const { name, adminEmail, adminName } = req.body as CreateGroupPayload;
+  const { name } = req.body as { name?: string };
 
   if (!name?.trim()) {
     return res.status(400).json({ error: "Group name is required" });
-  }
-
-  if (!adminEmail?.trim()) {
-    return res.status(400).json({ error: "Admin email is required" });
   }
 
   try {
@@ -42,23 +32,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(503).json({ error: "DATABASE_URL is not configured" });
     }
 
-    const admin = await prisma.user.upsert({
-      where: {
-        email: adminEmail.trim().toLowerCase(),
-      },
-      update: {
-        name: adminName?.trim() || undefined,
-      },
-      create: {
-        email: adminEmail.trim().toLowerCase(),
-        name: adminName?.trim() || null,
-      },
-    });
-
     const group = await prisma.group.create({
       data: {
         name: name.trim(),
-        adminId: admin.id,
+        adminId: session.user.id,
       },
     });
 

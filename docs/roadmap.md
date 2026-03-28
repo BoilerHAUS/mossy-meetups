@@ -53,14 +53,15 @@ Fields: display name, email (sign-in address, shown but not editable), phone, ho
 
 ---
 
-## Phase 2 — Group membership
+## Phase 2 — Group membership ✓
 **Goal:** Users can be invited to groups and see only their own groups.
 
-- [ ] `POST /api/invites` — group admin sends invite email with signed token
-- [ ] `GET /api/invites/[token]` — validates token, adds user to group, redirects to dashboard
-- [ ] `GET /api/groups` — returns only groups the authed user belongs to
-- [ ] Group detail page `/groups/[id]`
-- [ ] Membership tracked via `Invite.usedAt` (or `UserGroup` pivot table)
+- [x] `POST /api/invites` — group admin sends invite email with signed token
+- [x] `/join/[token]` page — validates token, adds user to group, redirects to dashboard
+- [x] Dashboard filters groups/events by membership (admin or accepted invite)
+- [x] Group detail page `/groups/[id]` — members list, events, invite form
+- [x] Membership tracked via `Invite.usedAt` + `userId`
+- [x] `POST /api/groups` now uses session user as admin (removed `adminEmail` body field)
 
 ---
 

@@ -31,7 +31,7 @@ export type HomePageData = {
   events: HomeEvent[];
 };
 
-export async function getHomePageData(): Promise<HomePageData> {
+export async function getHomePageData(userId: string): Promise<HomePageData> {
   if (!hasDatabaseUrl()) {
     return {
       databaseReady: false,
@@ -54,6 +54,12 @@ export async function getHomePageData(): Promise<HomePageData> {
     }
 
     const groups = await prisma.group.findMany({
+      where: {
+        OR: [
+          { adminId: userId },
+          { invites: { some: { userId, usedAt: { not: null } } } },
+        ],
+      },
       include: {
         admin: true,
         events: {

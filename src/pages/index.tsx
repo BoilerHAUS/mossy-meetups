@@ -1,6 +1,7 @@
 import { getServerSession } from "next-auth/next";
 import type { GetServerSideProps, InferGetServerSidePropsType } from "next";
 import Head from "next/head";
+import Link from "next/link";
 import { FormEvent, useState } from "react";
 
 import { authOptions } from "../lib/auth";
@@ -10,8 +11,6 @@ type Props = InferGetServerSidePropsType<typeof getServerSideProps>;
 
 const initialGroupForm = {
   name: "",
-  adminName: "",
-  adminEmail: "",
 };
 
 const initialEventForm = {
@@ -269,28 +268,6 @@ export default function Home({ databaseReady, databaseMessage, groups, events, u
                     required
                   />
                 </label>
-                <label>
-                  Host name
-                  <input
-                    value={groupForm.adminName}
-                    onChange={(event) =>
-                      setGroupForm((current) => ({ ...current, adminName: event.target.value }))
-                    }
-                    placeholder="Alex"
-                  />
-                </label>
-                <label>
-                  Host email
-                  <input
-                    type="email"
-                    value={groupForm.adminEmail}
-                    onChange={(event) =>
-                      setGroupForm((current) => ({ ...current, adminEmail: event.target.value }))
-                    }
-                    placeholder="alex@example.com"
-                    required
-                  />
-                </label>
                 {groupState.error ? <p className="form-error">{groupState.error}</p> : null}
                 <button type="submit" disabled={groupState.loading}>
                   {groupState.loading ? "Creating group..." : "Create group"}
@@ -525,7 +502,11 @@ export default function Home({ databaseReady, databaseMessage, groups, events, u
                   groups.map((group) => (
                     <article key={group.id} className="group-card">
                       <div>
-                        <h3>{group.name}</h3>
+                        <h3>
+                          <Link href={`/groups/${group.id}`} className="group-link">
+                            {group.name}
+                          </Link>
+                        </h3>
                         <p>
                           Hosted by {group.adminName} · {group.adminEmail}
                         </p>
@@ -1010,6 +991,15 @@ export default function Home({ databaseReady, databaseMessage, groups, events, u
           color: #f4dcb0;
         }
 
+        .group-link {
+          color: #f3ebdc;
+          text-decoration: none;
+        }
+
+        .group-link:hover {
+          color: #d7b97f;
+        }
+
         /* Modal */
         .modal-overlay {
           position: fixed;
@@ -1070,7 +1060,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     return { redirect: { destination: "/profile", permanent: false } };
   }
 
-  const data = await getHomePageData();
+  const data = await getHomePageData(session.user.id);
 
   return {
     props: {

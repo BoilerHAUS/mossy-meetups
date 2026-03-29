@@ -29,19 +29,20 @@ export function ThemeToggle() {
           justify-content: center;
           width: 32px;
           height: 32px;
-          background: transparent;
-          border: 1px solid var(--border-strong);
-          border-radius: var(--radius-pill);
-          color: var(--text-muted);
+          background: rgba(215, 185, 127, 0.1);
+          border: 1px solid rgba(215, 185, 127, 0.35);
+          border-radius: var(--radius-pill, 999px);
+          color: #d7b97f;
           cursor: pointer;
           padding: 0;
           font-family: inherit;
-          transition: border-color 0.15s, color 0.15s;
+          transition: border-color 0.15s, color 0.15s, background 0.15s;
         }
 
         .theme-toggle:hover {
-          border-color: var(--accent);
-          color: var(--accent);
+          background: rgba(215, 185, 127, 0.2);
+          border-color: rgba(215, 185, 127, 0.65);
+          color: #f4dcb0;
         }
       `}</style>
     </button>

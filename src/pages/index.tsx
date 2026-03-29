@@ -14,6 +14,7 @@ import { WeekView, type WeekEvent } from "../components/WeekView";
 import { TbdEventCard, type TbdEventCardEvent } from "../components/TbdEventCard";
 import type { RSVPStatus } from "../components/RSVPButton";
 import { Tooltip } from "../components/Tooltip";
+import { LogoMark } from "../components/Logo";
 
 type Props = InferGetServerSidePropsType<typeof getServerSideProps>;
 
@@ -236,6 +237,19 @@ export default function Home({ databaseReady, databaseMessage, groups, upcomingE
         </section>
       ) : null}
 
+      {/* Hero */}
+      <section className="hero">
+        <div className="hero-copy">
+          <h1 className="hero-title">Where the crew<br />makes camp.</h1>
+          <p className="hero-sub">
+            Coordinate dates, collect RSVPs, and share calendars — no spreadsheets, no group texts.
+          </p>
+        </div>
+        <div className="hero-logo" aria-hidden="true">
+          <LogoMark size={120} color="var(--accent)" />
+        </div>
+      </section>
+
       {/* Stats */}
       <section className="stats-grid">
         <article className="stat-card">
@@ -248,7 +262,7 @@ export default function Home({ databaseReady, databaseMessage, groups, upcomingE
         </article>
         <article className="stat-card">
           <span>Next meetup</span>
-          <strong>{nextMeetup ? formatDate(nextMeetup.arrivalDate) : "None scheduled"}</strong>
+          <strong suppressHydrationWarning>{nextMeetup ? formatDate(nextMeetup.arrivalDate) : "None scheduled"}</strong>
         </article>
       </section>
 
@@ -640,6 +654,55 @@ export default function Home({ databaseReady, databaseMessage, groups, upcomingE
       ) : null}
 
       <style jsx>{`
+        /* ── Hero ── */
+        .hero {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 24px;
+          margin-bottom: 28px;
+          padding: 36px 36px;
+          border: 1px solid var(--border);
+          border-radius: var(--radius-card);
+          background: var(--bg-card);
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
+          overflow: hidden;
+        }
+
+        .hero-copy {
+          flex: 1;
+          min-width: 0;
+        }
+
+        .hero-title {
+          font-family: var(--font-display);
+          font-size: clamp(1.8rem, 4vw, 2.8rem);
+          font-weight: 700;
+          color: var(--text);
+          margin: 0 0 12px;
+          line-height: 1.1;
+          letter-spacing: -0.02em;
+        }
+
+        .hero-sub {
+          font-size: 1rem;
+          color: var(--text-muted);
+          margin: 0;
+          line-height: 1.6;
+          max-width: 440px;
+        }
+
+        .hero-logo {
+          flex-shrink: 0;
+          opacity: 0.75;
+        }
+
+        @media (max-width: 600px) {
+          .hero { padding: 24px 20px; gap: 16px; }
+          .hero-logo { display: none; }
+        }
+
         .warning-card {
           margin-bottom: 24px;
           padding: 20px;

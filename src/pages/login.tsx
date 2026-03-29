@@ -2,6 +2,8 @@ import { signIn } from "next-auth/react";
 import Head from "next/head";
 import { FormEvent, useState } from "react";
 
+import { LogoMark } from "../components/Logo";
+
 type FormState = "idle" | "loading" | "sent" | "error";
 
 export default function Login() {
@@ -29,73 +31,83 @@ export default function Login() {
     <>
       <Head>
         <title>Sign in — Mossy Meetups</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
       <main className="shell">
-        <div className="card">
-          <p className="eyebrow">Mossy Meetups</p>
-          <h1>Sign in</h1>
+        <div className="hero">
+          {/* Left: sign-in form */}
+          <div className="form-col">
+            <p className="eyebrow">Mossy Meetups</p>
+            <h1>Sign in</h1>
+            <p className="tagline">Plan together. Camp together. Mossy vibes.</p>
 
-          {state === "sent" ? (
-            <div className="sent">
-              <p>Check your email — a magic link is on its way to <strong>{email}</strong>.</p>
-              <p className="hint">Click the link in the email to sign in. You can close this tab.</p>
+            {state === "sent" ? (
+              <div className="sent">
+                <p>Check your email — a magic link is on its way to <strong>{email}</strong>.</p>
+                <p className="hint">Click the link in the email to sign in. You can close this tab.</p>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit}>
+                <label htmlFor="email">Email address</label>
+                <input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  required
+                  autoFocus
+                />
+                {state === "error" ? (
+                  <p className="error" role="alert">Something went wrong. Please try again.</p>
+                ) : null}
+                <button type="submit" disabled={state === "loading"}>
+                  {state === "loading" ? "Sending link..." : "Send magic link"}
+                </button>
+              </form>
+            )}
+          </div>
+
+          {/* Right: logo hero */}
+          <div className="logo-col" aria-hidden="true">
+            <div className="logo-glow">
+              <LogoMark size={160} color="#d7b97f" />
             </div>
-          ) : (
-            <form onSubmit={handleSubmit}>
-              <label htmlFor="email">Email address</label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
-                required
-                autoFocus
-              />
-              {state === "error" ? (
-                <p className="error">Something went wrong. Please try again.</p>
-              ) : null}
-              <button type="submit" disabled={state === "loading"}>
-                {state === "loading" ? "Sending link..." : "Send magic link"}
-              </button>
-            </form>
-          )}
+            <p className="logo-text">Mossy<br />Meetups</p>
+          </div>
         </div>
       </main>
+
       <style jsx>{`
-        :global(body) {
-          margin: 0;
-          font-family: Georgia, "Times New Roman", serif;
-          background: radial-gradient(circle at top, rgba(245, 201, 120, 0.22), transparent 30%),
-            linear-gradient(180deg, #10231d 0%, #0a1512 55%, #07100d 100%);
-          color: #f3ebdc;
+        .shell {
           min-height: 100vh;
           display: flex;
           align-items: center;
           justify-content: center;
-        }
-
-        :global(*) {
-          box-sizing: border-box;
-        }
-
-        .shell {
-          width: 100%;
           padding: 24px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
         }
 
-        .card {
+        .hero {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 0;
           width: 100%;
-          max-width: 420px;
+          max-width: 820px;
           border: 1px solid rgba(243, 235, 220, 0.12);
           background: rgba(13, 28, 23, 0.74);
-          box-shadow: 0 30px 60px rgba(0, 0, 0, 0.25);
+          box-shadow: 0 40px 80px rgba(0, 0, 0, 0.35);
           backdrop-filter: blur(10px);
-          border-radius: 28px;
-          padding: 36px;
+          -webkit-backdrop-filter: blur(10px);
+          border-radius: 32px;
+          overflow: hidden;
+        }
+
+        /* ── Left: form ── */
+        .form-col {
+          padding: 48px 44px;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
         }
 
         .eyebrow {
@@ -107,9 +119,18 @@ export default function Login() {
         }
 
         h1 {
-          margin: 0 0 28px;
-          font-size: 2rem;
-          line-height: 1.1;
+          font-family: var(--font-display, Georgia, serif);
+          margin: 0 0 8px;
+          font-size: 2.6rem;
+          line-height: 1.05;
+          color: #f3ebdc;
+        }
+
+        .tagline {
+          color: #8a847a;
+          font-size: 0.9rem;
+          margin: 0 0 32px;
+          font-style: italic;
         }
 
         form {
@@ -148,6 +169,11 @@ export default function Login() {
           color: #10231d;
           font-weight: 700;
           cursor: pointer;
+          transition: opacity 0.15s;
+        }
+
+        button:hover:not(:disabled) {
+          opacity: 0.9;
         }
 
         button:disabled {
@@ -174,6 +200,53 @@ export default function Login() {
           color: #f0a090;
           font-size: 0.9rem;
           margin: 0;
+        }
+
+        /* ── Right: logo hero ── */
+        .logo-col {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 24px;
+          background: linear-gradient(145deg, rgba(106, 154, 79, 0.18), rgba(46, 125, 50, 0.08));
+          border-left: 1px solid rgba(243, 235, 220, 0.08);
+          padding: 48px 32px;
+        }
+
+        .logo-glow {
+          position: relative;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          filter: drop-shadow(0 0 32px rgba(215, 185, 127, 0.45));
+        }
+
+        .logo-text {
+          font-family: var(--font-display, Georgia, serif);
+          font-size: 2rem;
+          font-weight: 700;
+          line-height: 1.1;
+          text-align: center;
+          color: rgba(243, 235, 220, 0.55);
+          margin: 0;
+          letter-spacing: -0.02em;
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 640px) {
+          .hero {
+            grid-template-columns: 1fr;
+            max-width: 440px;
+          }
+
+          .logo-col {
+            display: none;
+          }
+
+          .form-col {
+            padding: 36px 28px;
+          }
         }
       `}</style>
     </>

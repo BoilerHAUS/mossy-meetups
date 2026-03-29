@@ -5,6 +5,8 @@ import { signOut, useSession } from "next-auth/react";
 import type { ReactNode } from "react";
 
 import { GroupSidebar, type SidebarGroup } from "./GroupSidebar";
+import { LogoWordmark } from "./Logo";
+import { ThemeToggle } from "./ThemeToggle";
 
 interface AppShellProps {
   children: ReactNode;
@@ -25,13 +27,14 @@ export function AppShell({ children, title, groups }: AppShellProps) {
     <>
       <Head>
         <title>{pageTitle}</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
 
       <div className="shell">
         {/* Top nav */}
-        <nav className="nav">
-          <Link href="/" className="nav-brand">
-            Mossy Meetups
+        <nav className="nav" role="navigation" aria-label="Main navigation">
+          <Link href="/" className="nav-brand" aria-label="Mossy Meetups home">
+            <LogoWordmark size="sm" />
           </Link>
 
           <div className="nav-right">
@@ -40,6 +43,7 @@ export function AppShell({ children, title, groups }: AppShellProps) {
                 {session.user.name}
               </Link>
             ) : null}
+            <ThemeToggle />
             <button
               type="button"
               onClick={handleSignOut}
@@ -58,7 +62,7 @@ export function AppShell({ children, title, groups }: AppShellProps) {
             </div>
           ) : null}
 
-          <main className="main">{children}</main>
+          <main className="main" id="main-content">{children}</main>
         </div>
       </div>
 
@@ -75,58 +79,55 @@ export function AppShell({ children, title, groups }: AppShellProps) {
           align-items: center;
           justify-content: space-between;
           padding: 0 24px;
-          height: 56px;
-          border-bottom: 1px solid rgba(243, 235, 220, 0.08);
-          background: rgba(10, 21, 18, 0.7);
+          height: 58px;
+          border-bottom: 1px solid var(--border);
+          background: var(--bg-nav);
           backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
           position: sticky;
           top: 0;
           z-index: 50;
           flex-shrink: 0;
+          box-shadow: var(--shadow-nav);
         }
 
         .nav-brand {
-          font-size: 1rem;
-          font-weight: 700;
-          color: #f3ebdc;
           text-decoration: none;
-          letter-spacing: 0.02em;
-        }
-
-        .nav-brand:hover {
-          color: #d7b97f;
+          display: flex;
+          align-items: center;
         }
 
         .nav-right {
           display: flex;
           align-items: center;
-          gap: 16px;
+          gap: 12px;
         }
 
         .nav-user {
           font-size: 0.88rem;
-          color: #c9c2b3;
+          color: var(--text-muted);
           text-decoration: none;
         }
 
         .nav-user:hover {
-          color: #f3ebdc;
+          color: var(--text);
         }
 
         .nav-signout {
           font-family: inherit;
           font-size: 0.88rem;
           background: transparent;
-          border: 1px solid rgba(243, 235, 220, 0.2);
-          color: #c9c2b3;
+          border: 1px solid var(--border-strong);
+          color: var(--text-muted);
           padding: 5px 12px;
-          border-radius: 999px;
+          border-radius: var(--radius-pill);
           cursor: pointer;
+          transition: border-color 0.15s, color 0.15s;
         }
 
         .nav-signout:hover {
-          border-color: rgba(243, 235, 220, 0.4);
-          color: #f3ebdc;
+          border-color: var(--accent);
+          color: var(--text);
         }
 
         /* ── Body layout ── */

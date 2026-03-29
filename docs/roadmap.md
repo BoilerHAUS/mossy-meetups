@@ -138,20 +138,46 @@ Fields: display name, email (sign-in address, shown but not editable), phone, ho
 
 ---
 
-## Phase 7 — Design polish
+## Phase 7 — Design polish ✓
 **Goal:** Brand tokens wired, typography loaded, accessibility clean. Ship last.
 
-- [ ] CSS custom properties for all brand color tokens
-- [ ] Dark / light theme toggle
-- [ ] Fraunces + Inter via `next/font/google`
-- [ ] WCAG AA contrast audit
-- [ ] Error boundary component
-- [ ] Custom 404 and 500 pages
-- [ ] Design SVG Logo
-- [ ] Hero Section redsign with logo and rewording. Logo on right side of hero.
-- [ ] Create a new project readme, making it as beautiful as markdown can be. It should match the project where possible, utilizing graphics, badges and banners to make it look amazing.
+- [x] CSS custom properties for all brand color tokens
+- [x] Dark / light theme toggle
+- [x] Fraunces + Inter via `next/font/google`
+- [x] WCAG AA contrast audit
+- [x] Error boundary component
+- [x] Custom 404 and 500 pages
+- [x] Design SVG Logo
+- [x] Hero Section redesign with logo and rewording. Logo on right side of hero.
+- [x] Create a new project readme, making it as beautiful as markdown can be. It should match the project where possible, utilizing graphics, badges and banners to make it look amazing.
+
+## Phase 8a - Loose Ends and improvements
+
+- [ ] Replace Departure with "nights counter" so departure date is automatically created. (this helps determine departure dates on TBD arrival voting also)
+- [ ] when someone click "going" to an event, that should automatically make them part of that group, no need to wait for an email invite (which should still exist also)
+- [ ] create a FAQ or a how to guide, so people know how to use the site.
+- [ ] find places where tooltips would be helpful and implement them.
+- [ ] implement weather into the calendar, especially for dates that have events attached. Use a free weather api. It would be really cool to create animations in the event card that are suitable to the weather report. Make it fun.
+- [ ] at a "countdown" days until event into every event card that has dates determined.
+- [ ] any text that is also a link, should be a button, to make the site more attractive.
+- [ ] There should be a checkmark in the event creation for "[ ] Potluck" (sometime when we camp, there is a potluck, but not always)
+
+## Phase 8b - more loose ends and improvements
+
+- [ ] create ability to edit/delete groups you create
+- [ ] a person should be able to list only events they have RSVPd to.
+- [ ] google map embed is not found as a link, it is an html iframe embed. ie <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2937.76855134674!2d-80.39333982292297!3d42.581434821085416!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x882db9a118a94299%3A0xfabf79973830a32a!2sLong%20Point%20Provincial%20Park!5e0!3m2!1sen!2sca!4v1774742487572!5m2!1sen!2sca" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+- [ ] ensure people can only vote once when voting on date
+- [ ] UX on location voting is either missing or too hard to figure out how to do, it should work exactly like the date voting does, lettuce meet style, again ensuring 1 vote per person.
 
 
+## Phase 8c - More Moss
+- [ ] The site needs more moss. Not just colour but things and graphics that look like moss.
+- [ ] For fun, we should be like old kids camps, create a list of essentials to take camping (like something you might find in a boy scout manual)
+- [ ] We should have a first aide section
+- [ ] We should have a tick safety section.
+- [ ] We should have a rainy day activities section
+- [ ] We should have a campers etiquette section (make it silly)
 ---
 
 ## Completed

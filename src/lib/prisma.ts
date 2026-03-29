@@ -1,6 +1,6 @@
 declare global {
   // eslint-disable-next-line no-var
-  var prisma: unknown;
+  var prisma: import("@prisma/client").PrismaClient | undefined;
 }
 
 export function hasDatabaseUrl() {
@@ -13,11 +13,9 @@ export function getPrismaClient() {
   }
 
   const { PrismaClient } = require("@prisma/client") as typeof import("@prisma/client");
-  const prisma = (global.prisma as import("@prisma/client").PrismaClient | undefined) || new PrismaClient();
-
-  if (process.env.NODE_ENV !== "production") {
-    global.prisma = prisma;
+  if (!global.prisma) {
+    global.prisma = new PrismaClient();
   }
 
-  return prisma;
+  return global.prisma;
 }

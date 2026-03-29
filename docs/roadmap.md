@@ -151,33 +151,47 @@ Fields: display name, email (sign-in address, shown but not editable), phone, ho
 - [x] Hero Section redesign with logo and rewording. Logo on right side of hero.
 - [x] Create a new project readme, making it as beautiful as markdown can be. It should match the project where possible, utilizing graphics, badges and banners to make it look amazing.
 
-## Phase 8a - Loose Ends and improvements
+## Phase 8a — Bug Fixes & Critical UX Corrections
+**Goal:** Fix known bugs and UX gaps that break or obscure core functionality.
 
-- [ ] Replace Departure with "nights counter" so departure date is automatically created. (this helps determine departure dates on TBD arrival voting also)
-- [ ] when someone click "going" to an event, that should automatically make them part of that group, no need to wait for an email invite (which should still exist also)
-- [ ] create a FAQ or a how to guide, so people know how to use the site.
-- [ ] find places where tooltips would be helpful and implement them.
-- [ ] implement weather into the calendar, especially for dates that have events attached. Use a free weather api. It would be really cool to create animations in the event card that are suitable to the weather report. Make it fun.
-- [ ] at a "countdown" days until event into every event card that has dates determined.
-- [ ] any text that is also a link, should be a button, to make the site more attractive.
-- [ ] There should be a checkmark in the event creation for "[ ] Potluck" (sometime when we camp, there is a potluck, but not always)
+- [ ] **Map embed input** — the map field expects a Google Maps `<iframe>` embed snippet, not a plain URL. Update the input label, placeholder, and help text to reflect this. If the user pastes a full `<iframe>` tag, parse the `src` attribute automatically rather than storing raw HTML.
+- [ ] **Single vote enforcement on date proposals** — verify that `POST /api/date-votes` enforces the `@@unique([dateProposalId, userId])` constraint at the API layer, not just the database, and that the UI disables or un-highlights a cell the user has already voted on so the state is always visible.
+- [ ] **Location voting UX overhaul** — current location voting is confusing or non-functional. Replace it with a LettuceMeet-style grid (locations as columns, members as rows, click a cell to cast or change your vote) that mirrors the date voting experience. Enforce one vote per user per event.
+- [ ] **Edit and delete for your own groups** — group admins should see "Edit" and "Delete" controls on the group detail page. Deleting a group must confirm before proceeding and cascade-removes all events, RSVPs, and invites.
 
-## Phase 8b - more loose ends and improvements
+---
 
-- [ ] create ability to edit/delete groups you create
-- [ ] a person should be able to list only events they have RSVPd to.
-- [ ] google map embed is not found as a link, it is an html iframe embed. ie <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2937.76855134674!2d-80.39333982292297!3d42.581434821085416!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x882db9a118a94299%3A0xfabf79973830a32a!2sLong%20Point%20Provincial%20Park!5e0!3m2!1sen!2sca!4v1774742487572!5m2!1sen!2sca" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
-- [ ] ensure people can only vote once when voting on date
-- [ ] UX on location voting is either missing or too hard to figure out how to do, it should work exactly like the date voting does, lettuce meet style, again ensuring 1 vote per person.
+## Phase 8b — Event & Group Feature Enhancements
+**Goal:** Improve the event planning workflow with focused additions that remove friction.
 
+- [ ] **Nights counter replaces departure date** — swap the departure date field for a "How many nights?" number input. Departure date is calculated automatically (`arrivalDate + nights`). For TBD events, apply the same nights offset to each date proposal so the full stay window shows in the availability grid.
+- [ ] **Auto-join group on RSVP** — when a user RSVPs "Attending" or "Maybe" to an event, add them to the event's group as a member automatically if they are not already one. Email invites remain available in parallel as a way to reach people before they find the event.
+- [ ] **Potluck flag on events** — add a "Potluck" checkbox to event creation and the event edit form. Show a potluck badge on EventCards and on the event detail page when enabled.
+- [ ] **Countdown pill on EventCards** — for events with a confirmed arrival date, display "X days away", "Tomorrow", "Today!", or "Happening now" as a small pill. Update the label appropriately once the event is in the past.
+- [ ] **"My RSVPs" filter on the dashboard** — add a toggle that switches the event list between "All upcoming events" and "Events I've responded to". Remember the last-used preference in local state.
 
-## Phase 8c - More Moss
-- [ ] The site needs more moss. Not just colour but things and graphics that look like moss.
-- [ ] For fun, we should be like old kids camps, create a list of essentials to take camping (like something you might find in a boy scout manual)
-- [ ] We should have a first aide section
-- [ ] We should have a tick safety section.
-- [ ] We should have a rainy day activities section
-- [ ] We should have a campers etiquette section (make it silly)
+---
+
+## Phase 8c — Polish & Interaction Delight
+**Goal:** Add the small touches that make the app feel alive and easy to use.
+
+- [ ] **Contextual tooltips** — add helpful tooltips in at least these locations: date vote grid cells (what a filled vs. empty cell means), the nights counter input, the RSVP status buttons (what MAYBE implies for headcount), and the "Confirm date" admin action.
+- [ ] **Links as buttons** — audit all inline text links and replace any that look like plain body text with clearly styled link or button components. Every clickable affordance should look clickable.
+- [ ] **Weather on event cards** — integrate [Open-Meteo](https://open-meteo.com/) (free, no API key required) to fetch a forecast for each confirmed event date and location. Show a weather condition icon and temperature on the EventCard. Add a subtle CSS animation (sun rays, drifting clouds, rain drops) that matches the forecast — keep it tasteful but fun.
+
+---
+
+## Phase 8d — Content & Personality ("More Moss")
+**Goal:** Lean into the Dead-head / festival camping aesthetic with useful, playful content that makes the site feel like a living camp community.
+
+- [ ] **Visual moss** — add illustrated or SVG moss textures to card edges, the sidebar footer, section dividers, and the page footer. The goal is organic shapes and textures, not just green colour.
+- [ ] **Camping essentials checklist** — a page or collapsible panel listing packing must-haves written in the spirit of a vintage Boy Scout field manual. Make it practical and printable.
+- [ ] **First aid quick-reference** — basic wilderness first-aid reminders (cuts, burns, sprains, bee stings). Keep the tone earnest and the content actually useful.
+- [ ] **Tick safety guide** — how to check after a hike, how to remove a tick properly, and when to see a doctor. Practical tone; no need to be scary.
+- [ ] **Rainy day activities** — a fun list of things to do when the skies open up at camp. Lean into the culture.
+- [ ] **Campers' etiquette** — a playful, slightly tongue-in-cheek set of camp commandments for good citizens of the site (quiet hours, shared fire wood, leave no trace, etc.).
+- [ ] **FAQ / How-to guide** — a short explainer covering the core flows: creating a group, sending invites, proposing and voting on dates, confirming a date, RSVPing, and exporting to calendar. Link it from the nav or footer.
+
 ---
 
 ## Completed

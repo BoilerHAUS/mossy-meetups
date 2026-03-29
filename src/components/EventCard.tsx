@@ -2,6 +2,7 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { RSVPButton, type RSVPStatus } from "./RSVPButton";
+import { WeatherWidget } from "./WeatherWidget";
 
 export interface EventCardEvent {
   id: string;
@@ -173,6 +174,12 @@ export function EventCard({ event, userId, onEdit, onDelete, onRsvpChange }: Eve
         />
       ) : null}
 
+      {event.arrivalDate && event.location ? (
+        <div className="weather-row">
+          <WeatherWidget location={event.location} arrivalDate={event.arrivalDate} />
+        </div>
+      ) : null}
+
       <div className="card-footer">
         <RSVPButton
           eventId={event.id}
@@ -306,14 +313,20 @@ export function EventCard({ event, userId, onEdit, onDelete, onRsvpChange }: Eve
         }
 
         .tbd-vote-link {
-          font-size: 0.82rem;
-          color: #f4dcb0;
+          display: inline-flex;
+          align-items: center;
+          font-size: 0.78rem;
+          color: #10231d;
           text-decoration: none;
-          font-weight: 600;
+          font-weight: 700;
+          background: linear-gradient(135deg, #d7b97f, #b98545);
+          padding: 4px 11px;
+          border-radius: 999px;
+          transition: opacity 0.15s;
         }
 
         .tbd-vote-link:hover {
-          color: #fff;
+          opacity: 0.88;
         }
 
         .event-meta {
@@ -350,6 +363,11 @@ export function EventCard({ event, userId, onEdit, onDelete, onRsvpChange }: Eve
           margin-bottom: 10px;
         }
 
+        .weather-row {
+          padding: 6px 0 8px;
+          border-top: 1px solid rgba(243, 235, 220, 0.06);
+        }
+
         .card-footer {
           display: flex;
           align-items: center;
@@ -362,14 +380,19 @@ export function EventCard({ event, userId, onEdit, onDelete, onRsvpChange }: Eve
 
         .detail-link {
           font-size: 0.82rem;
-          color: #c9c2b3;
+          color: #d7b97f;
           text-decoration: none;
           white-space: nowrap;
           flex-shrink: 0;
+          font-weight: 600;
+          border-bottom: 1px solid rgba(215, 185, 127, 0.35);
+          padding-bottom: 1px;
+          transition: color 0.15s, border-color 0.15s;
         }
 
         .detail-link:hover {
-          color: #f3ebdc;
+          color: #f4dcb0;
+          border-bottom-color: rgba(244, 220, 176, 0.7);
         }
 
         .btn-icon {

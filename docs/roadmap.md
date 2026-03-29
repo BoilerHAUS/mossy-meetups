@@ -172,12 +172,12 @@ Fields: display name, email (sign-in address, shown but not editable), phone, ho
 
 ---
 
-## Phase 8c — Polish & Interaction Delight
+## Phase 8c — Polish & Interaction Delight ✓
 **Goal:** Add the small touches that make the app feel alive and easy to use.
 
-- [ ] **Contextual tooltips** — add helpful tooltips in at least these locations: date vote grid cells (what a filled vs. empty cell means), the nights counter input, the RSVP status buttons (what MAYBE implies for headcount), and the "Confirm date" admin action.
-- [ ] **Links as buttons** — audit all inline text links and replace any that look like plain body text with clearly styled link or button components. Every clickable affordance should look clickable.
-- [ ] **Weather on event cards** — integrate [Open-Meteo](https://open-meteo.com/) (free, no API key required) to fetch a forecast for each confirmed event date and location. Show a weather condition icon and temperature on the EventCard. Add a subtle CSS animation (sun rays, drifting clouds, rain drops) that matches the forecast — keep it tasteful but fun.
+- [x] **Contextual tooltips** — add helpful tooltips in at least these locations: date vote grid cells (what a filled vs. empty cell means), the nights counter input, the RSVP status buttons (what MAYBE implies for headcount), and the "Confirm date" admin action.
+- [x] **Links as buttons** — audit all inline text links and replace any that look like plain body text with clearly styled link or button components. Every clickable affordance should look clickable.
+- [x] **Weather on event cards** — integrate [Open-Meteo](https://open-meteo.com/) (free, no API key required) to fetch a forecast for each confirmed event date and location. Show a weather condition icon and temperature on the EventCard. Add a subtle CSS animation (sun rays, drifting clouds, rain drops) that matches the forecast — keep it tasteful but fun.
 
 ---
 

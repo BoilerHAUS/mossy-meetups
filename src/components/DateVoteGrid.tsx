@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { DatePicker } from "./DatePicker";
+import { Tooltip } from "./Tooltip";
 
 export interface DateProposalData {
   id: string;
@@ -203,14 +204,20 @@ export function DateVoteGrid({
                   return (
                     <td key={p.id} className="dvg-cell-td">
                       {isCurrentUser ? (
-                        <button
-                          type="button"
-                          className={`dvg-cell dvg-cell--interactive ${voted ? "dvg-cell--yes" : "dvg-cell--no"}`}
-                          onClick={() => toggleVote(p)}
-                          aria-label={voted ? "Remove availability" : "Mark as available"}
+                        <Tooltip
+                          text={voted ? "Click to remove your availability" : "Click to mark yourself as available on this date"}
+                          position="top"
+                          maxWidth={180}
                         >
-                          {voted ? "✓" : ""}
-                        </button>
+                          <button
+                            type="button"
+                            className={`dvg-cell dvg-cell--interactive ${voted ? "dvg-cell--yes" : "dvg-cell--no"}`}
+                            onClick={() => toggleVote(p)}
+                            aria-label={voted ? "Remove availability" : "Mark as available"}
+                          >
+                            {voted ? "✓" : ""}
+                          </button>
+                        </Tooltip>
                       ) : (
                         <div className={`dvg-cell ${voted ? "dvg-cell--yes" : "dvg-cell--no"}`}>
                           {voted ? "✓" : ""}
@@ -238,15 +245,21 @@ export function DateVoteGrid({
       {isAdmin && proposals.length > 0 ? (
         <div className="dvg-confirm-row">
           {proposals.map((p) => (
-            <button
+            <Tooltip
               key={p.id}
-              type="button"
-              className="dvg-confirm-btn"
-              onClick={() => handleConfirmDate(p)}
-              disabled={confirmingId === p.id}
+              text="Sets this as the confirmed arrival date and moves the event to Upcoming. This cannot be undone easily."
+              position="top"
+              maxWidth={240}
             >
-              {confirmingId === p.id ? "Confirming…" : `Confirm ${formatColDate(p.date)}`}
-            </button>
+              <button
+                type="button"
+                className="dvg-confirm-btn"
+                onClick={() => handleConfirmDate(p)}
+                disabled={confirmingId === p.id}
+              >
+                {confirmingId === p.id ? "Confirming…" : `Confirm ${formatColDate(p.date)}`}
+              </button>
+            </Tooltip>
           ))}
         </div>
       ) : null}

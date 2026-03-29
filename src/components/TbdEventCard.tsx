@@ -104,15 +104,23 @@ export function TbdEventCard({ event }: TbdEventCardProps) {
         }
 
         .cta-link {
-          font-size: 0.88rem;
-          color: #f4dcb0;
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          font-size: 0.85rem;
+          color: #10231d;
           text-decoration: none;
-          font-weight: 600;
-          margin-top: 2px;
+          font-weight: 700;
+          margin-top: 4px;
+          background: linear-gradient(135deg, #d7b97f, #b98545);
+          padding: 7px 14px;
+          border-radius: 999px;
+          align-self: flex-start;
+          transition: opacity 0.15s;
         }
 
         .cta-link:hover {
-          color: #fff;
+          opacity: 0.88;
         }
       `}</style>
     </div>

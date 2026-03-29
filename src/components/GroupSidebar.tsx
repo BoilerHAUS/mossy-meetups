@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
+import { MossTexture } from "./MossTexture";
 
 export interface SidebarGroup {
   id: string;
@@ -34,12 +35,26 @@ export function GroupSidebar({ groups }: GroupSidebarProps) {
         </ul>
       )}
 
+      <div className="sidebar-moss">
+        <MossTexture variant="footer" />
+      </div>
+
       <style jsx>{`
         .sidebar {
           width: 220px;
           flex-shrink: 0;
-          padding: 24px 16px;
+          padding: 24px 16px 8px;
           border-right: 1px solid rgba(243, 235, 220, 0.08);
+          display: flex;
+          flex-direction: column;
+        }
+
+        .sidebar-moss {
+          margin-top: auto;
+          padding-top: 12px;
+          opacity: 0.7;
+          overflow: hidden;
+          height: 40px;
         }
 
         .sidebar-label {

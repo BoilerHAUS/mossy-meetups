@@ -7,6 +7,7 @@ import type { ReactNode } from "react";
 import { GroupSidebar, type SidebarGroup } from "./GroupSidebar";
 import { LogoWordmark } from "./Logo";
 import { ThemeToggle } from "./ThemeToggle";
+import { MossTexture } from "./MossTexture";
 
 interface AppShellProps {
   children: ReactNode;
@@ -38,6 +39,12 @@ export function AppShell({ children, title, groups }: AppShellProps) {
           </Link>
 
           <div className="nav-right">
+            <Link href="/camp-guide" className="nav-link" title="Field Manual">
+              📖
+            </Link>
+            <Link href="/faq" className="nav-link" title="FAQ & How-To">
+              ❓
+            </Link>
             {session?.user?.name ? (
               <Link href="/profile" className="nav-user">
                 {session.user.name}
@@ -64,6 +71,11 @@ export function AppShell({ children, title, groups }: AppShellProps) {
 
           <main className="main" id="main-content">{children}</main>
         </div>
+
+        {/* Page footer moss strip */}
+        <footer className="page-footer" aria-hidden="true">
+          <MossTexture variant="footer" />
+        </footer>
       </div>
 
       <style jsx>{`
@@ -101,6 +113,20 @@ export function AppShell({ children, title, groups }: AppShellProps) {
           display: flex;
           align-items: center;
           gap: 12px;
+        }
+
+        .nav-link {
+          font-size: 1rem;
+          text-decoration: none;
+          opacity: 0.65;
+          transition: opacity 0.15s;
+          line-height: 1;
+          display: flex;
+          align-items: center;
+        }
+
+        .nav-link:hover {
+          opacity: 1;
         }
 
         .nav-user {
@@ -145,6 +171,15 @@ export function AppShell({ children, title, groups }: AppShellProps) {
           flex: 1;
           min-width: 0;
           padding: 32px 28px 64px;
+        }
+
+        /* ── Page footer moss ── */
+        .page-footer {
+          height: 48px;
+          overflow: hidden;
+          opacity: 0.55;
+          flex-shrink: 0;
+          padding: 0 8px;
         }
 
         @media (max-width: 768px) {

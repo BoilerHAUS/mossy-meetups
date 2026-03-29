@@ -13,6 +13,7 @@ import { DatePicker } from "../components/DatePicker";
 import { WeekView, type WeekEvent } from "../components/WeekView";
 import { TbdEventCard, type TbdEventCardEvent } from "../components/TbdEventCard";
 import type { RSVPStatus } from "../components/RSVPButton";
+import { Tooltip } from "../components/Tooltip";
 
 type Props = InferGetServerSidePropsType<typeof getServerSideProps>;
 
@@ -356,7 +357,16 @@ export default function Home({ databaseReady, databaseMessage, groups, upcomingE
                   placeholder="TBD — leave blank to vote later"
                 />
                 <label>
-                  How many nights?
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                    How many nights?
+                    <Tooltip
+                      text="Departure date is calculated automatically as arrival + nights. Applies to each date proposal in the voting grid too."
+                      position="top"
+                      maxWidth={240}
+                    >
+                      <span aria-label="Help" style={{ cursor: "help", fontSize: "0.8rem", color: "#8a847a", lineHeight: 1 }}>ⓘ</span>
+                    </Tooltip>
+                  </span>
                   <input
                     type="number"
                     min="1"
@@ -562,7 +572,16 @@ export default function Home({ databaseReady, databaseMessage, groups, upcomingE
                   placeholder="TBD — leave blank to vote later"
                 />
                 <label>
-                  How many nights?
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                    How many nights?
+                    <Tooltip
+                      text="Departure date is calculated automatically as arrival + nights. Applies to each date proposal in the voting grid too."
+                      position="top"
+                      maxWidth={240}
+                    >
+                      <span aria-label="Help" style={{ cursor: "help", fontSize: "0.8rem", color: "#8a847a", lineHeight: 1 }}>ⓘ</span>
+                    </Tooltip>
+                  </span>
                   <input
                     type="number"
                     min="1"

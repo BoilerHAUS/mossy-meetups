@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { useState } from "react";
 
-import { authOptions } from "../../lib/auth";
+import { getAuthOptions } from "../../lib/auth";
 import { getPrismaClient } from "../../lib/prisma";
 import { RSVPButton, type RSVPStatus } from "../../components/RSVPButton";
 import { AppShell } from "../../components/AppShell";
@@ -485,7 +485,7 @@ export default function EventPage({
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const { id } = context.params as { id: string };
 
-  const session = await getServerSession(context.req, context.res, authOptions);
+  const session = await getServerSession(context.req, context.res, getAuthOptions());
   if (!session) {
     return { redirect: { destination: "/login", permanent: false } };
   }

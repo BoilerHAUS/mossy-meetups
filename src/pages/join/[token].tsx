@@ -3,7 +3,7 @@ import type { GetServerSideProps, InferGetServerSidePropsType } from "next";
 import Head from "next/head";
 import Link from "next/link";
 
-import { authOptions } from "../../lib/auth";
+import { getAuthOptions } from "../../lib/auth";
 import { getPrismaClient } from "../../lib/prisma";
 
 type Status = "accepted" | "invalid" | "expired" | "already_used" | "wrong_email" | "already_member";
@@ -138,7 +138,7 @@ export default function JoinPage({ status, groupName }: Props) {
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const { token } = context.params as { token: string };
 
-  const session = await getServerSession(context.req, context.res, authOptions);
+  const session = await getServerSession(context.req, context.res, getAuthOptions());
   if (!session) {
     return {
       redirect: {

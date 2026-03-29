@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "../../lib/auth";
+import { getAuthOptions } from "../../lib/auth";
 
 export interface WeatherData {
   condition: "sunny" | "partly-cloudy" | "cloudy" | "rainy" | "stormy" | "snowy" | "foggy" | "unknown";
@@ -38,7 +38,7 @@ export default async function handler(
     return res.status(405).json({ success: false, error: "Method not allowed" });
   }
 
-  const session = await getServerSession(req, res, authOptions);
+  const session = await getServerSession(req, res, getAuthOptions());
   if (!session) {
     return res.status(401).json({ success: false, error: "Unauthorized" });
   }

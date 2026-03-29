@@ -3,7 +3,7 @@ import type { GetServerSideProps, InferGetServerSidePropsType } from "next";
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/router";
 
-import { authOptions } from "../../lib/auth";
+import { getAuthOptions } from "../../lib/auth";
 import { getPrismaClient } from "../../lib/prisma";
 import { AppShell } from "../../components/AppShell";
 import { EventCard, type EventCardEvent } from "../../components/EventCard";
@@ -568,7 +568,7 @@ export default function GroupPage({ group, isAdmin, userId, sidebarGroups }: Pro
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const { id } = context.params as { id: string };
-  const session = await getServerSession(context.req, context.res, authOptions);
+  const session = await getServerSession(context.req, context.res, getAuthOptions());
   if (!session) return { redirect: { destination: "/login", permanent: false } };
 
   const prisma = getPrismaClient();

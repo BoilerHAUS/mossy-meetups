@@ -2,12 +2,12 @@ import { getServerSession } from "next-auth/next";
 import type { GetServerSideProps } from "next";
 import { useState } from "react";
 
-import { authOptions } from "../lib/auth";
+import { getAuthOptions } from "../lib/auth";
 import { AppShell } from "../components/AppShell";
 import { MossTexture } from "../components/MossTexture";
 
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
-  const session = await getServerSession(ctx.req, ctx.res, authOptions);
+  const session = await getServerSession(ctx.req, ctx.res, getAuthOptions());
   if (!session) return { redirect: { destination: "/login", permanent: false } };
   return { props: {} };
 };

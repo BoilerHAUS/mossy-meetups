@@ -4,7 +4,7 @@ import { FormEvent, useState } from "react";
 
 import { useEffect } from "react";
 
-import { authOptions } from "../lib/auth";
+import { getAuthOptions } from "../lib/auth";
 import { getHomePageData } from "../lib/home-data";
 import { AppShell } from "../components/AppShell";
 import { EventCard, type EventCardEvent } from "../components/EventCard";
@@ -993,7 +993,7 @@ export default function Home({ databaseReady, databaseMessage, groups, upcomingE
 }
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
-  const session = await getServerSession(context.req, context.res, authOptions);
+  const session = await getServerSession(context.req, context.res, getAuthOptions());
   if (!session) return { redirect: { destination: "/login", permanent: false } };
   if (!session.user.name) return { redirect: { destination: "/profile", permanent: false } };
 

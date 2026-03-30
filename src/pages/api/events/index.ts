@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth/next";
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { getAuthOptions } from "../../../lib/auth";
+import { hasTooManyLocationOptions, parseLocationOptionNames } from "../../../lib/location-options";
 import { getPrismaClient, hasDatabaseUrl } from "../../../lib/prisma";
 import { parseDate } from "../../../lib/parse-date";
 import { withRateLimit } from "../../../lib/rate-limit";
@@ -13,6 +14,7 @@ type CreateEventPayload = {
   location?: string;
   mapLink?: string;
   mapEmbed?: string;
+  locationOptions?: string;
   arrivalDate?: string;
   nights?: number | string;
   isPotluck?: boolean;
@@ -43,6 +45,21 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     return res.status(400).json({ error: "Event title is required" });
   }
 
+  if (hasTooManyLocationOptions(payload.locationOptions)) {
+    return res.status(400).json({ error: "You can add up to 4 location vote options" });
+  }
+
+  const locationOptionNames = parseLocationOptionNames(payload.locationOptions);
+  const hasFixedLocation = Boolean(
+    payload.location?.trim() || payload.mapLink?.trim() || payload.mapEmbed?.trim()
+  );
+
+  if (hasFixedLocation && locationOptionNames.length > 0) {
+    return res.status(400).json({
+      error: "Use either a confirmed location or comma-separated location vote options, not both",
+    });
+  }
+
   const arrivalDate = parseDate(payload.arrivalDate);
   const nights = payload.nights ? parseInt(String(payload.nights), 10) : null;
   const departureDate =
@@ -69,6 +86,15 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         departureDate,
         nights: nights && nights > 0 ? nights : null,
         isPotluck: Boolean(payload.isPotluck),
+        locationOptions:
+          locationOptionNames.length > 0
+            ? {
+                create: locationOptionNames.map((name) => ({
+                  name,
+                  createdBy: session.user.id,
+                })),
+              }
+            : undefined,
       },
     });
 

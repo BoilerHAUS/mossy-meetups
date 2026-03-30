@@ -172,7 +172,7 @@ export default function EventPage({
               {!event.location ? (
                 <p className="helper-copy">
                   {isAdmin
-                    ? "Add up to 4 location options below. Everyone can cast one vote, and you can confirm the winner once the group decides."
+                    ? "Add up to 4 location options below, or seed them from the event create/edit form using comma-separated names. Everyone can cast one vote, and you can confirm the winner once the group decides."
                     : "Once the host adds location options, click your preferred spot in the grid below. You can change your vote any time until a location is confirmed."}
                 </p>
               ) : null}

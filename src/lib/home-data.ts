@@ -27,6 +27,7 @@ export type HomeEvent = {
   userRsvpStatus: string | null;
   dateProposalCount: number;
   locationOptionCount: number;
+  locationOptionNames: string[];
 };
 
 export type HomePageData = {
@@ -79,6 +80,14 @@ export async function getHomePageData(userId: string): Promise<HomePageData> {
                 locationOptions: true,
               },
             },
+            locationOptions: {
+              select: {
+                name: true,
+              },
+              orderBy: {
+                createdAt: "asc",
+              },
+            },
             rsvps: {
               where: { userId },
               select: { status: true },
@@ -122,6 +131,7 @@ export async function getHomePageData(userId: string): Promise<HomePageData> {
         userRsvpStatus: event.rsvps[0]?.status ?? null,
         dateProposalCount: event._count.dateProposals,
         locationOptionCount: event._count.locationOptions,
+        locationOptionNames: event.locationOptions.map((option) => option.name),
       })),
     );
 

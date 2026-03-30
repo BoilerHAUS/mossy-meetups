@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth/next";
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { getAuthOptions } from "../../../lib/auth";
+import { hasTooManyLocationOptions, parseLocationOptionNames } from "../../../lib/location-options";
 import { getPrismaClient } from "../../../lib/prisma";
 
 type UpdateEventPayload = {
@@ -10,6 +11,7 @@ type UpdateEventPayload = {
   location?: string;
   mapLink?: string;
   mapEmbed?: string;
+  locationOptions?: string;
   arrivalDate?: string;
   nights?: number | string;
   isPotluck?: boolean;
@@ -39,7 +41,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const event = await prisma.event.findUnique({
     where: { id },
-    include: { group: true },
+    include: { group: true, locationOptions: true },
   });
 
   if (!event) {
@@ -63,6 +65,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ error: "Event title is required" });
     }
 
+    if ("locationOptions" in payload && hasTooManyLocationOptions(payload.locationOptions)) {
+      return res.status(400).json({ error: "You can add up to 4 location vote options" });
+    }
+
     // Build a partial update — only include fields present in the payload
     const data: Record<string, unknown> = {};
 
@@ -72,6 +78,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if ("mapLink" in payload) data.mapLink = payload.mapLink?.trim() || null;
     if ("mapEmbed" in payload) data.mapEmbed = payload.mapEmbed?.trim() || null;
     if ("isPotluck" in payload) data.isPotluck = Boolean(payload.isPotluck);
+
+    const locationOptionNames =
+      "locationOptions" in payload ? parseLocationOptionNames(payload.locationOptions) : null;
+    const hasFixedLocation =
+      Boolean(("location" in payload && payload.location?.trim()) ||
+      ("mapLink" in payload && payload.mapLink?.trim()) ||
+      ("mapEmbed" in payload && payload.mapEmbed?.trim()));
+
+    if (locationOptionNames && locationOptionNames.length > 0 && hasFixedLocation) {
+      return res.status(400).json({
+        error: "Use either a confirmed location or comma-separated location vote options, not both",
+      });
+    }
 
     if ("arrivalDate" in payload || "nights" in payload) {
       const nights = payload.nights ? parseInt(String(payload.nights), 10) : null;
@@ -96,7 +115,27 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     }
 
-    const updated = await prisma.event.update({ where: { id }, data });
+    const updated = await prisma.$transaction(async (tx) => {
+      if ("locationOptions" in payload) {
+        await tx.locationOption.deleteMany({ where: { eventId: id } });
+      }
+
+      return tx.event.update({
+        where: { id },
+        data: {
+          ...data,
+          locationOptions:
+            "locationOptions" in payload && locationOptionNames && locationOptionNames.length > 0
+              ? {
+                  create: locationOptionNames.map((name) => ({
+                    name,
+                    createdBy: session.user.id,
+                  })),
+                }
+              : undefined,
+        },
+      });
+    });
 
     return res.status(200).json({ success: true, data: updated });
   }

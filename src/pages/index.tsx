@@ -6,6 +6,7 @@ import { useEffect } from "react";
 
 import { getAuthOptions } from "../lib/auth";
 import { getHomePageData } from "../lib/home-data";
+import { hasTooManyLocationOptions } from "../lib/location-options";
 import { AppShell } from "../components/AppShell";
 import { EventCard, type EventCardEvent } from "../components/EventCard";
 import { GroupCard } from "../components/GroupCard";
@@ -26,6 +27,7 @@ const initialEventForm = {
   location: "",
   mapLink: "",
   mapEmbed: "",
+  locationOptions: "",
   arrivalDate: "",
   nights: "",
   isPotluck: false,
@@ -108,6 +110,7 @@ export default function Home({ databaseReady, databaseMessage, groups, upcomingE
       location: event.location || "",
       mapLink: event.mapLink || "",
       mapEmbed: event.mapEmbed || "",
+      locationOptions: event.locationOptionNames.join(", "),
       arrivalDate: event.arrivalDate ? isoToDatetimeLocal(event.arrivalDate) : "",
       nights: event.nights?.toString() || "",
       isPotluck: event.isPotluck,
@@ -142,6 +145,20 @@ export default function Home({ databaseReady, databaseMessage, groups, upcomingE
   async function handleEditEventSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!editingId) return;
+
+    if (editEventForm.location.trim() && editEventForm.locationOptions.trim()) {
+      setEditState({
+        loading: false,
+        error: "Choose either a confirmed location or comma-separated location vote options",
+      });
+      return;
+    }
+
+    if (hasTooManyLocationOptions(editEventForm.locationOptions)) {
+      setEditState({ loading: false, error: "You can add up to 4 location vote options" });
+      return;
+    }
+
     setEditState({ loading: true, error: null });
     const res = await fetch(`/api/events/${editingId}`, {
       method: "PATCH",
@@ -194,6 +211,20 @@ export default function Home({ databaseReady, databaseMessage, groups, upcomingE
 
   async function handleEventSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+
+    if (eventForm.location.trim() && eventForm.locationOptions.trim()) {
+      setEventState({
+        loading: false,
+        error: "Choose either a confirmed location or comma-separated location vote options",
+      });
+      return;
+    }
+
+    if (hasTooManyLocationOptions(eventForm.locationOptions)) {
+      setEventState({ loading: false, error: "You can add up to 4 location vote options" });
+      return;
+    }
+
     setEventState({ loading: true, error: null });
     const res = await fetch("/api/events", {
       method: "POST",
@@ -341,6 +372,15 @@ export default function Home({ databaseReady, databaseMessage, groups, upcomingE
                   onChange={(e) => setEventForm((f) => ({ ...f, location: e.target.value }))}
                   placeholder="North Grove"
                 />
+              </label>
+              <label>
+                Location vote options
+                <input
+                  value={eventForm.locationOptions}
+                  onChange={(e) => setEventForm((f) => ({ ...f, locationOptions: e.target.value }))}
+                  placeholder="Turtle Dunes, Pine Ridge, North Grove"
+                />
+                <span className="field-hint">Optional. Separate options with commas. Leave the Location field blank if you want the group to vote.</span>
               </label>
               <label>
                 Map link
@@ -556,6 +596,15 @@ export default function Home({ databaseReady, databaseMessage, groups, upcomingE
                   value={editEventForm.location}
                   onChange={(e) => setEditEventForm((f) => ({ ...f, location: e.target.value }))}
                 />
+              </label>
+              <label>
+                Location vote options
+                <input
+                  value={editEventForm.locationOptions}
+                  onChange={(e) => setEditEventForm((f) => ({ ...f, locationOptions: e.target.value }))}
+                  placeholder="Turtle Dunes, Pine Ridge, North Grove"
+                />
+                <span className="field-hint">Optional. Separate options with commas. Leave the Location field blank if you want the group to vote.</span>
               </label>
               <label>
                 Map link

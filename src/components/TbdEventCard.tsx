@@ -26,23 +26,25 @@ export function TbdEventCard({ event }: TbdEventCardProps) {
         <p className="description">{event.description}</p>
       ) : null}
 
-      <div className="meta">
-        <span className="tbd-badge">Needs a date</span>
-        {event.dateProposalCount > 0 ? (
-          <span className="hint">
-            {event.dateProposalCount} date{event.dateProposalCount === 1 ? "" : "s"} proposed
-          </span>
-        ) : null}
-        {event.locationOptionCount > 0 ? (
-          <span className="hint">
-            {event.locationOptionCount} location{event.locationOptionCount === 1 ? "" : "s"} to vote on
-          </span>
-        ) : null}
-      </div>
+      <div className="footer">
+        <div className="meta">
+          <span className="tbd-badge">Needs a date</span>
+          {event.dateProposalCount > 0 ? (
+            <span className="hint">
+              {event.dateProposalCount} date{event.dateProposalCount === 1 ? "" : "s"} proposed
+            </span>
+          ) : null}
+          {event.locationOptionCount > 0 ? (
+            <span className="hint">
+              {event.locationOptionCount} location{event.locationOptionCount === 1 ? "" : "s"} to vote on
+            </span>
+          ) : null}
+        </div>
 
-      <Link href={`/events/${event.id}`} className="cta-link">
-        Vote on date →
-      </Link>
+        <Link href={`/events/${event.id}`} className="cta-link">
+          Vote on date →
+        </Link>
+      </div>
 
       <style jsx>{`
         .tbd-card {
@@ -88,6 +90,14 @@ export function TbdEventCard({ event }: TbdEventCardProps) {
           margin-top: 2px;
         }
 
+        .footer {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          margin-top: 4px;
+        }
+
         .tbd-badge {
           font-size: 0.72rem;
           padding: 3px 9px;
@@ -103,7 +113,7 @@ export function TbdEventCard({ event }: TbdEventCardProps) {
           color: #8a847a;
         }
 
-        .cta-link {
+        :global(a.cta-link) {
           display: inline-flex;
           align-items: center;
           gap: 4px;
@@ -116,11 +126,19 @@ export function TbdEventCard({ event }: TbdEventCardProps) {
           padding: 7px 14px;
           border-radius: 999px;
           align-self: flex-start;
+          flex-shrink: 0;
           transition: opacity 0.15s;
         }
 
-        .cta-link:hover {
+        :global(a.cta-link:hover) {
           opacity: 0.88;
+        }
+
+        @media (max-width: 640px) {
+          .footer {
+            flex-direction: column;
+            align-items: flex-start;
+          }
         }
       `}</style>
     </div>

@@ -64,7 +64,9 @@ export default function EventPage({
   return (
     <AppShell title={event.title} groups={sidebarGroups}>
       <nav className="breadcrumb">
-        <Link href={`/groups/${event.groupId}`}>← {event.groupName}</Link>
+        <Link href={`/groups/${event.groupId}`} className="breadcrumb-link">
+          ← {event.groupName}
+        </Link>
       </nav>
 
       <div className="layout">
@@ -168,6 +170,13 @@ export default function EventPage({
                   : "Location TBD"}
               </h2>
               {!event.location ? (
+                <p className="helper-copy">
+                  {isAdmin
+                    ? "Add up to 4 location options below. Everyone can cast one vote, and you can confirm the winner once the group decides."
+                    : "Once the host adds location options, click your preferred spot in the grid below. You can change your vote any time until a location is confirmed."}
+                </p>
+              ) : null}
+              {!event.location ? (
                 <LocationPoll
                   eventId={event.id}
                   options={locationOptions as LocationOptionData[]}
@@ -264,13 +273,27 @@ export default function EventPage({
           margin-bottom: 24px;
         }
 
-        .breadcrumb a {
-          color: #c9c2b3;
+        :global(a.breadcrumb-link) {
+          display: inline-flex;
+          align-items: center;
+          min-height: 40px;
+          padding: 0 16px;
+          border-radius: 999px;
+          border: 1px solid rgba(215, 185, 127, 0.24);
+          background: rgba(255, 255, 255, 0.04);
+          color: #e0d6c5;
           text-decoration: none;
           font-size: 0.9rem;
+          font-weight: 600;
+          transition: transform 0.15s, border-color 0.15s, background 0.15s, color 0.15s;
         }
 
-        .breadcrumb a:hover {
+        :global(a.breadcrumb-link:hover) {
+          transform: translateY(-1px);
+          border-color: rgba(215, 185, 127, 0.44);
+          background:
+            linear-gradient(135deg, rgba(215, 185, 127, 0.16), rgba(185, 133, 69, 0.08)),
+            rgba(9, 18, 15, 0.72);
           color: #f3ebdc;
         }
 
@@ -327,6 +350,14 @@ export default function EventPage({
           color: #c9c2b3;
           margin: 0 0 18px;
           line-height: 1.6;
+        }
+
+        .helper-copy {
+          margin: -4px 0 16px;
+          color: #c9c2b3;
+          font-size: 0.92rem;
+          line-height: 1.55;
+          max-width: 60ch;
         }
 
         .potluck-badge {

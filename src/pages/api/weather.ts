@@ -2,7 +2,8 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth/next";
 import { getAuthOptions } from "../../lib/auth";
 
-export interface WeatherData {
+export interface WeatherDayData {
+  date: string;
   condition: "sunny" | "partly-cloudy" | "cloudy" | "rainy" | "stormy" | "snowy" | "foggy" | "unknown";
   temperatureC: number;
   temperatureF: number;
@@ -11,12 +12,12 @@ export interface WeatherData {
 
 interface ApiResponse {
   success: boolean;
-  data?: WeatherData;
+  data?: WeatherDayData[];
   error?: string;
 }
 
 // WMO weather interpretation codes → our condition enum
-function interpretWMO(code: number): { condition: WeatherData["condition"]; description: string } {
+function interpretWMO(code: number): { condition: WeatherDayData["condition"]; description: string } {
   if (code === 0) return { condition: "sunny", description: "Clear sky" };
   if (code <= 2) return { condition: "partly-cloudy", description: "Partly cloudy" };
   if (code === 3) return { condition: "cloudy", description: "Overcast" };
@@ -43,13 +44,21 @@ export default async function handler(
     return res.status(401).json({ success: false, error: "Unauthorized" });
   }
 
-  const { lat, lon, date, location } = req.query;
+  const { lat, lon, date, endDate, location } = req.query;
 
   if (!date || typeof date !== "string") {
     return res.status(400).json({ success: false, error: "date is required" });
   }
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
     return res.status(400).json({ success: false, error: "date must be YYYY-MM-DD" });
+  }
+  if (endDate && (typeof endDate !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(endDate))) {
+    return res.status(400).json({ success: false, error: "endDate must be YYYY-MM-DD" });
+  }
+
+  const rangeEndDate = typeof endDate === "string" ? endDate : date;
+  if (rangeEndDate < date) {
+    return res.status(400).json({ success: false, error: "endDate must be on or after date" });
   }
 
   let latNum: number;
@@ -79,7 +88,7 @@ export default async function handler(
   }
 
   try {
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${latNum}&longitude=${lonNum}&daily=weathercode,temperature_2m_max,temperature_2m_min&start_date=${date}&end_date=${date}&timezone=auto`;
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${latNum}&longitude=${lonNum}&daily=weathercode,temperature_2m_max,temperature_2m_min&start_date=${date}&end_date=${rangeEndDate}&timezone=auto`;
     const response = await fetch(url);
 
     if (!response.ok) {
@@ -93,21 +102,26 @@ export default async function handler(
       return res.status(404).json({ success: false, error: "No forecast available for this date" });
     }
 
-    const code: number = daily.weathercode[0];
-    const maxC: number = daily.temperature_2m_max[0];
-    const minC: number = daily.temperature_2m_min[0];
-    const avgC = Math.round((maxC + minC) / 2);
-    const avgF = Math.round(avgC * 9 / 5 + 32);
-    const { condition, description } = interpretWMO(code);
+    const forecast = daily.time.map((forecastDate: string, index: number) => {
+      const code: number = daily.weathercode[index];
+      const maxC: number = daily.temperature_2m_max[index];
+      const minC: number = daily.temperature_2m_min[index];
+      const avgC = Math.round((maxC + minC) / 2);
+      const avgF = Math.round(avgC * 9 / 5 + 32);
+      const { condition, description } = interpretWMO(code);
 
-    return res.status(200).json({
-      success: true,
-      data: {
+      return {
+        date: forecastDate,
         condition,
         temperatureC: avgC,
         temperatureF: avgF,
         description,
-      },
+      };
+    });
+
+    return res.status(200).json({
+      success: true,
+      data: forecast,
     });
   } catch {
     return res.status(500).json({ success: false, error: "Failed to fetch weather" });

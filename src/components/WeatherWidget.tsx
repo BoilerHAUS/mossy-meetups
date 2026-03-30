@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import type { WeatherData } from "../pages/api/weather";
+import type { WeatherDayData } from "../pages/api/weather";
 
 interface WeatherWidgetProps {
   location: string;
   arrivalDate: string; // ISO string
+  departureDate?: string | null;
 }
 
 function isoToYMD(iso: string): string {
@@ -148,7 +149,7 @@ function FoggyIcon() {
   );
 }
 
-function WeatherIcon({ condition }: { condition: WeatherData["condition"] }) {
+function WeatherIcon({ condition }: { condition: WeatherDayData["condition"] }) {
   switch (condition) {
     case "sunny": return <SunIcon />;
     case "partly-cloudy": return <PartlyCloudyIcon />;
@@ -161,8 +162,16 @@ function WeatherIcon({ condition }: { condition: WeatherData["condition"] }) {
   }
 }
 
-export function WeatherWidget({ location, arrivalDate }: WeatherWidgetProps) {
-  const [weather, setWeather] = useState<WeatherData | null>(null);
+function formatForecastLabel(date: string) {
+  return new Intl.DateTimeFormat("en-CA", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  }).format(new Date(`${date}T12:00:00`));
+}
+
+export function WeatherWidget({ location, arrivalDate, departureDate }: WeatherWidgetProps) {
+  const [forecast, setForecast] = useState<WeatherDayData[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -173,15 +182,18 @@ export function WeatherWidget({ location, arrivalDate }: WeatherWidgetProps) {
 
     const date = isoToYMD(arrivalDate);
     const params = new URLSearchParams({ location, date });
+    if (departureDate) {
+      params.set("endDate", isoToYMD(departureDate));
+    }
 
     fetch(`/api/weather?${params}`)
       .then((r) => (r.ok ? r.json() : null))
       .then((json) => {
-        if (json?.success && json.data) setWeather(json.data);
+        if (json?.success && Array.isArray(json.data)) setForecast(json.data);
       })
       .catch(() => null)
       .finally(() => setLoading(false));
-  }, [location, arrivalDate]);
+  }, [location, arrivalDate, departureDate]);
 
   if (loading) {
     return (
@@ -196,28 +208,69 @@ export function WeatherWidget({ location, arrivalDate }: WeatherWidgetProps) {
     );
   }
 
-  if (!weather) return null;
+  if (forecast.length === 0) return null;
 
   return (
-    <div className="wx-root" title={`${weather.description} · ${weather.temperatureF}°F / ${weather.temperatureC}°C`}>
-      <div className="wx-icon-wrap">
-        <WeatherIcon condition={weather.condition} />
-      </div>
-      <div className="wx-text">
-        <span className="wx-temp">{weather.temperatureF}°F</span>
-        <span className="wx-desc">{weather.description}</span>
-      </div>
+    <div className="wx-root" aria-label="Event weather forecast">
+      {forecast.map((day) => (
+        <div
+          key={day.date}
+          className="wx-day"
+          title={`${formatForecastLabel(day.date)} · ${day.description} · ${day.temperatureC}°C / ${day.temperatureF}°F`}
+        >
+          <div className="wx-day-header">
+            <span className="wx-date">{formatForecastLabel(day.date)}</span>
+          </div>
+          <div className="wx-day-body">
+            <div className="wx-icon-wrap">
+              <WeatherIcon condition={day.condition} />
+            </div>
+            <div className="wx-text">
+              <span className="wx-temp">{day.temperatureC}°C</span>
+              <span className="wx-desc">{day.description}</span>
+            </div>
+          </div>
+        </div>
+      ))}
 
       <style jsx>{`
         .wx-root {
-          display: inline-flex;
+          display: flex;
+          flex-wrap: wrap;
+          gap: 10px;
+          margin-top: 2px;
+        }
+
+        .wx-day {
+          min-width: 128px;
+          border: 1px solid rgba(243, 235, 220, 0.1);
+          border-radius: 14px;
+          background: rgba(5, 11, 9, 0.34);
+          padding: 10px 12px;
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+        }
+
+        .wx-day-header {
+          margin-bottom: 8px;
+        }
+
+        .wx-date {
+          font-size: 0.72rem;
+          font-weight: 700;
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+          color: #d7b97f;
+        }
+
+        .wx-day-body {
+          display: flex;
           align-items: center;
-          gap: 6px;
+          gap: 8px;
         }
 
         .wx-icon-wrap {
-          width: 28px;
-          height: 28px;
+          width: 30px;
+          height: 30px;
           flex-shrink: 0;
         }
 
@@ -230,20 +283,33 @@ export function WeatherWidget({ location, arrivalDate }: WeatherWidgetProps) {
         .wx-text {
           display: flex;
           flex-direction: column;
-          gap: 1px;
+          gap: 2px;
+          min-width: 0;
         }
 
         .wx-temp {
-          font-size: 0.82rem;
+          font-size: 0.88rem;
           font-weight: 700;
           color: #f4dcb0;
           line-height: 1;
         }
 
         .wx-desc {
-          font-size: 0.7rem;
+          font-size: 0.72rem;
           color: #8a847a;
-          line-height: 1;
+          line-height: 1.2;
+          text-transform: capitalize;
+        }
+
+        @media (max-width: 640px) {
+          .wx-root {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+          }
+
+          .wx-day {
+            min-width: 0;
+          }
         }
       `}</style>
     </div>

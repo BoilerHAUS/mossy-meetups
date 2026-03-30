@@ -182,7 +182,11 @@ export function EventCard({ event, userId, onEdit, onDelete, onRsvpChange }: Eve
 
       {event.arrivalDate && event.location ? (
         <div className="weather-row">
-          <WeatherWidget location={event.location} arrivalDate={event.arrivalDate} />
+          <WeatherWidget
+            location={event.location}
+            arrivalDate={event.arrivalDate}
+            departureDate={event.departureDate}
+          />
         </div>
       ) : null}
 

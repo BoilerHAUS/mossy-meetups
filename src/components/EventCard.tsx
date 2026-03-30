@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 
+import { CalendarExportButton } from "./CalendarExportButton";
 import { RSVPButton, type RSVPStatus } from "./RSVPButton";
+import { ShareEventButton } from "./ShareEventButton";
 import { WeatherWidget } from "./WeatherWidget";
 
 export interface EventCardEvent {
@@ -191,11 +193,17 @@ export function EventCard({ event, userId, onEdit, onDelete, onRsvpChange }: Eve
       ) : null}
 
       <div className="card-footer">
-        <RSVPButton
-          eventId={event.id}
-          initialStatus={rsvpStatus}
-          onStatusChange={handleRsvpChange}
-        />
+        <div className="card-footer-actions">
+          <RSVPButton
+            eventId={event.id}
+            initialStatus={rsvpStatus}
+            onStatusChange={handleRsvpChange}
+          />
+          <ShareEventButton eventId={event.id} eventTitle={event.title} />
+          {event.arrivalDate ? (
+            <CalendarExportButton href={`/api/events/${event.id}/ics`} label="Add to calendar" />
+          ) : null}
+        </div>
         <Link href={`/events/${event.id}`} className="detail-link">
           Details →
         </Link>
@@ -386,6 +394,13 @@ export function EventCard({ event, userId, onEdit, onDelete, onRsvpChange }: Eve
           margin-top: 12px;
           padding-top: 12px;
           border-top: 1px solid rgba(243, 235, 220, 0.08);
+        }
+
+        .card-footer-actions {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          flex-wrap: wrap;
         }
 
         :global(a.detail-link) {

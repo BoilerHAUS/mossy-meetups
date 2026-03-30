@@ -5,12 +5,18 @@ import { useRouter } from "next/router";
 import { useState } from "react";
 
 import { getAuthOptions } from "../../lib/auth";
+import {
+  groupAttendeesByStatus,
+  type EventAttendeeSummary,
+} from "../../lib/event-view";
 import { getPrismaClient } from "../../lib/prisma";
 import { RSVPButton, type RSVPStatus } from "../../components/RSVPButton";
 import { AppShell } from "../../components/AppShell";
+import { CalendarExportButton } from "../../components/CalendarExportButton";
 import { DateVoteGrid, type DateProposalData, type MemberData } from "../../components/DateVoteGrid";
 import { DiscussionPanel, type EventCommentView } from "../../components/DiscussionPanel";
 import { LocationPoll, type LocationOptionData } from "../../components/LocationPoll";
+import { ShareEventButton } from "../../components/ShareEventButton";
 
 type Props = InferGetServerSidePropsType<typeof getServerSideProps>;
 
@@ -25,7 +31,7 @@ function formatDate(value: string | null) {
 const STATUS_LABELS: Record<RSVPStatus, string> = {
   ATTENDING: "Going",
   MAYBE: "Maybe",
-  NOT_ATTENDING: "Can't make it",
+  NOT_ATTENDING: "Can't go",
 };
 
 export default function EventPage({
@@ -45,22 +51,41 @@ export default function EventPage({
     userRsvpStatus as RSVPStatus | null
   );
   const [rsvpCount, setRsvpCount] = useState(event.rsvpCount);
+  const [attendees, setAttendees] = useState(event.attendees as EventAttendeeSummary[]);
+  const currentMemberName = members.find((member) => member.id === userId)?.name || "You";
 
   function handleStatusChange(newStatus: RSVPStatus, hadPreviousRsvp: boolean) {
     setRsvpStatus(newStatus);
     if (!hadPreviousRsvp) {
       setRsvpCount((c) => c + 1);
     }
+    setAttendees((current) => {
+      const existingAttendee = current.find((attendee) => attendee.userId === userId);
+
+      if (existingAttendee) {
+        return current.map((attendee) =>
+          attendee.userId === userId ? { ...attendee, status: newStatus } : attendee
+        );
+      }
+
+      return [
+        ...current,
+        {
+          userId,
+          status: newStatus,
+          name: currentMemberName,
+          email: currentMemberName,
+          hometown: null,
+        },
+      ];
+    });
   }
 
   function refreshPage() {
     router.replace(router.asPath);
   }
 
-  const attendees = event.attendees;
-  const going = attendees.filter((a) => a.status === "ATTENDING");
-  const maybe = attendees.filter((a) => a.status === "MAYBE");
-  const notGoing = attendees.filter((a) => a.status === "NOT_ATTENDING");
+  const { going, maybe, notGoing } = groupAttendeesByStatus(attendees);
   const isTbd = !event.arrivalDate;
 
   return (
@@ -131,14 +156,6 @@ export default function EventPage({
                     title={`Map for ${event.title}`}
                   />
                 ) : null}
-
-                <a
-                  href={`/api/events/${event.id}/ics`}
-                  className="ics-link"
-                  download
-                >
-                  Add to calendar (.ics) ↓
-                </a>
               </>
             )}
           </article>
@@ -192,67 +209,6 @@ export default function EventPage({
             </section>
           ) : null}
 
-          {/* Who's coming */}
-          <section className="panel">
-            <div className="panel-heading">
-              <div>
-                <p className="eyebrow">Attendees</p>
-                <h2>{rsvpCount} {rsvpCount === 1 ? "response" : "responses"}</h2>
-              </div>
-            </div>
-
-            {attendees.length === 0 ? (
-              <p className="empty-state">No RSVPs yet. Be the first!</p>
-            ) : (
-              <div className="attendee-groups">
-                {going.length > 0 ? (
-                  <div className="attendee-group">
-                    <p className="group-label going">Going ({going.length})</p>
-                    <ul className="attendee-list">
-                      {going.map((a) => (
-                        <li key={a.userId} className="attendee-row">
-                          <span className="attendee-name">{a.name || a.email}</span>
-                          {a.hometown ? (
-                            <span className="attendee-detail">{a.hometown}</span>
-                          ) : null}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ) : null}
-
-                {maybe.length > 0 ? (
-                  <div className="attendee-group">
-                    <p className="group-label maybe">Maybe ({maybe.length})</p>
-                    <ul className="attendee-list">
-                      {maybe.map((a) => (
-                        <li key={a.userId} className="attendee-row">
-                          <span className="attendee-name">{a.name || a.email}</span>
-                          {a.hometown ? (
-                            <span className="attendee-detail">{a.hometown}</span>
-                          ) : null}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ) : null}
-
-                {notGoing.length > 0 ? (
-                  <div className="attendee-group">
-                    <p className="group-label not-going">Can&apos;t make it ({notGoing.length})</p>
-                    <ul className="attendee-list">
-                      {notGoing.map((a) => (
-                        <li key={a.userId} className="attendee-row">
-                          <span className="attendee-name">{a.name || a.email}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ) : null}
-              </div>
-            )}
-          </section>
-
           <DiscussionPanel
             eventId={event.id}
             comments={comments as EventCommentView[]}
@@ -273,6 +229,82 @@ export default function EventPage({
               initialStatus={userRsvpStatus as RSVPStatus | null}
               onStatusChange={handleStatusChange}
             />
+            <div className="rsvp-divider" />
+            <ShareEventButton
+              eventId={event.id}
+              eventTitle={event.title}
+              fullWidth
+            />
+            {event.arrivalDate ? (
+              <div className="calendar-action">
+                <CalendarExportButton
+                  href={`/api/events/${event.id}/ics`}
+                  label="Add to calendar"
+                  fullWidth
+                />
+              </div>
+            ) : null}
+            <div className="sidebar-heading">
+              <p className="sidebar-label">Responses</p>
+              <span className="response-count">
+                {rsvpCount} {rsvpCount === 1 ? "RSVP" : "RSVPs"}
+              </span>
+            </div>
+            <div className="attendee-groups attendee-groups--compact">
+              <div className="attendee-group">
+                <p className="group-label going">Going ({going.length})</p>
+                {going.length > 0 ? (
+                  <ul className="attendee-list">
+                    {going.map((a) => (
+                      <li key={a.userId} className="attendee-row">
+                        <span className="attendee-name">{a.name || a.email}</span>
+                        {a.hometown ? (
+                          <span className="attendee-detail">{a.hometown}</span>
+                        ) : null}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="group-empty">No one yet</p>
+                )}
+              </div>
+
+              <div className="attendee-group">
+                <p className="group-label maybe">Maybe ({maybe.length})</p>
+                {maybe.length > 0 ? (
+                  <ul className="attendee-list">
+                    {maybe.map((a) => (
+                      <li key={a.userId} className="attendee-row">
+                        <span className="attendee-name">{a.name || a.email}</span>
+                        {a.hometown ? (
+                          <span className="attendee-detail">{a.hometown}</span>
+                        ) : null}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="group-empty">No one yet</p>
+                )}
+              </div>
+
+              <div className="attendee-group">
+                <p className="group-label not-going">Can&apos;t go ({notGoing.length})</p>
+                {notGoing.length > 0 ? (
+                  <ul className="attendee-list">
+                    {notGoing.map((a) => (
+                      <li key={a.userId} className="attendee-row">
+                        <span className="attendee-name">{a.name || a.email}</span>
+                        {a.hometown ? (
+                          <span className="attendee-detail">{a.hometown}</span>
+                        ) : null}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="group-empty">No one yet</p>
+                )}
+              </div>
+            </div>
           </section>
         </aside>
       </div>
@@ -428,16 +460,8 @@ export default function EventPage({
           font-size: 0.9rem;
         }
 
-        .ics-link {
-          display: inline-block;
-          color: #c9c2b3;
-          font-size: 0.82rem;
-          margin-top: 8px;
-          text-decoration: none;
-        }
-
-        .ics-link:hover {
-          color: #f3ebdc;
+        .calendar-action {
+          margin-top: 10px;
         }
 
         .map-embed {
@@ -454,9 +478,40 @@ export default function EventPage({
           margin-bottom: 14px;
         }
 
+        .rsvp-divider {
+          height: 1px;
+          background: rgba(243, 235, 220, 0.08);
+          margin: 18px 0;
+        }
+
+        .sidebar-heading {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          margin: 16px 0 12px;
+        }
+
+        .sidebar-label {
+          margin: 0;
+          color: #d7b97f;
+          text-transform: uppercase;
+          letter-spacing: 0.1em;
+          font-size: 0.75rem;
+        }
+
+        .response-count {
+          color: #c9c2b3;
+          font-size: 0.78rem;
+        }
+
         .attendee-groups {
           display: grid;
           gap: 18px;
+        }
+
+        .attendee-groups--compact {
+          gap: 16px;
         }
 
         .group-label {
@@ -481,9 +536,10 @@ export default function EventPage({
 
         .attendee-row {
           display: flex;
-          align-items: baseline;
-          gap: 8px;
-          padding: 8px 12px;
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 3px;
+          padding: 9px 12px;
           background: rgba(255, 255, 255, 0.04);
           border-radius: 10px;
         }
@@ -493,6 +549,12 @@ export default function EventPage({
         .attendee-detail {
           font-size: 0.8rem;
           color: #8a847a;
+        }
+
+        .group-empty {
+          margin: 0;
+          color: #8a847a;
+          font-size: 0.82rem;
         }
 
         .empty-state {

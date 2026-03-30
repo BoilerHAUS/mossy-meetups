@@ -9,6 +9,7 @@ import { getAuthOptions } from "../lib/auth";
 import { getHomePageData } from "../lib/home-data";
 import { hasTooManyLocationOptions } from "../lib/location-options";
 import { AppShell } from "../components/AppShell";
+import { CalendarExportButton } from "../components/CalendarExportButton";
 import { EventCard, type EventCardEvent } from "../components/EventCard";
 import { GroupCard } from "../components/GroupCard";
 import { DatePicker } from "../components/DatePicker";
@@ -522,9 +523,7 @@ export default function Home({ databaseReady, databaseMessage, groups, upcomingE
                   </button>
                 </div>
                 {scheduledUpcoming.length > 0 ? (
-                  <Link href="/api/events/ics" className="export-btn">
-                    Export all events
-                  </Link>
+                  <CalendarExportButton href="/api/events/ics" label="Export all events" />
                 ) : null}
               </div>
             </div>
@@ -928,28 +927,6 @@ export default function Home({ databaseReady, databaseMessage, groups, upcomingE
           background: rgba(215, 185, 127, 0.2);
           border-color: #d7b97f;
           color: #f4dcb0;
-        }
-
-        .export-btn {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          min-height: 34px;
-          padding: 0 14px;
-          border-radius: 999px;
-          border: 1px solid rgba(215, 185, 127, 0.3);
-          background: rgba(255, 255, 255, 0.04);
-          color: #f4dcb0;
-          text-decoration: none;
-          font-size: 0.78rem;
-          font-weight: 600;
-          transition: border-color 0.15s, background 0.15s, color 0.15s;
-        }
-
-        .export-btn:hover {
-          border-color: rgba(215, 185, 127, 0.5);
-          background: rgba(215, 185, 127, 0.12);
-          color: #fff1d2;
         }
 
         .form-grid {

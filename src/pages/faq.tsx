@@ -45,10 +45,20 @@ const FAQS: Array<{ q: string; a: string | string[] }> = [
   {
     q: "How does location voting work?",
     a: [
-      "The admin adds candidate locations to the event (max 4).",
+      "The admin can add candidate locations in two ways: during event creation/editing using comma-separated names, or later on the event detail page.",
+      "You can add up to 4 location options per event.",
       "Each member can cast one vote per event by clicking a cell in the Location Poll grid.",
       "You can change your vote at any time.",
       "The admin confirms a location once the group has decided.",
+    ],
+  },
+  {
+    q: "How do I create an event that needs a location vote?",
+    a: [
+      "Create or edit the event from the dashboard.",
+      "Leave the **Location** field blank.",
+      "In **Location vote options**, enter comma-separated names such as **Turtle Dunes, Pine Ridge, North Grove**.",
+      "Save the event — it will appear in the **Needs a location** section until the admin confirms one option.",
     ],
   },
   {
@@ -73,8 +83,34 @@ const FAQS: Array<{ q: string; a: string | string[] }> = [
     ],
   },
   {
+    q: "Can I export all my events at once?",
+    a: [
+      "Yes. On the dashboard, open the **Upcoming events** panel.",
+      "Use the **Export all events** button to download one `.ics` file containing all confirmed events you can access.",
+      "Import that file into Apple Calendar, Google Calendar, Outlook, or any other ICS-compatible calendar app.",
+    ],
+  },
+  {
+    q: "What are the List, Week, and Month views?",
+    a: [
+      "**List** is the default view and shows full event cards.",
+      "**Week** shows a rolling 7-day window starting from today.",
+      "**Month** shows a calendar-style overview of upcoming events.",
+      "Use the view toggle in the **Upcoming events** panel to switch between them at any time.",
+    ],
+  },
+  {
+    q: "How does weather work?",
+    a: [
+      "Confirmed events with a location show forecast cards on the event card.",
+      "Weather is displayed in Celsius first.",
+      "Multi-night events show one forecast tile per day of the trip.",
+      "If an event has no confirmed location yet, weather won't appear until the location is set.",
+    ],
+  },
+  {
     q: "Can I edit or delete an event?",
-    a: "Only the group admin can edit or delete events. Use the **Edit** and **Delete** buttons that appear on the event card when you're the admin. Deleting an event is permanent and removes all RSVPs and date votes.",
+    a: "Only the group admin can edit or delete events. Use the **Edit** and **Delete** buttons that appear on the event card when you're the admin. Deleting an event is permanent and removes all RSVPs, date votes, and location votes.",
   },
   {
     q: "Can I edit or delete a group?",

@@ -3,17 +3,16 @@
 > **Private group planning for music-loving campers.**
 > Coordinate dates, collect RSVPs, and share calendars — no spreadsheets, no group texts.
 
----
+Mossy Meetups is a private planning app for friend groups and families who camp together and need a shared place to:
 
-## What is this?
-
-Mossy Meetups is a private web app built for music-loving families and friend groups (Dead-head / festival culture) who need a better way to plan camping trips together. It replaces the endless group-chat thread with a focused tool:
-
-- **Week view** of upcoming events across all your groups
-- **Date & location voting** — members propose options, the group votes, the admin confirms
-- **RSVPs** with live counts on every event card
-- **Magic-link auth** — no passwords, no anonymous access
-- **Calendar export** — `.ics` download for every confirmed event
+- create host groups
+- invite people by email
+- schedule events or leave them TBD
+- vote on dates and locations
+- RSVP and track attendance
+- view events in list, rolling week, or month layouts
+- export individual events or the full schedule to calendar
+- check trip weather at a glance
 
 ---
 
@@ -23,13 +22,58 @@ Mossy Meetups is a private web app built for music-loving families and friend gr
 |---|---|
 | Frontend | Next.js 13 (pages router) + React 18 |
 | Styling | Tailwind CSS 3 + styled-jsx |
-| Fonts | Fraunces (display) + Inter (body) via `next/font` |
 | Auth | NextAuth.js — magic-link email |
 | ORM | Prisma 4 |
-| Database | PostgreSQL 16 |
+| Database | PostgreSQL |
 | Deployment | Dokploy + Docker on `moss.boilerhaus.org` |
-| CI | GitHub Actions — lint + test on every push to `main` |
+| Runtime | Custom Node server (`server.js`) serving the built Next app |
 | Testing | Vitest + React Testing Library + Playwright |
+
+---
+
+## Current features
+
+### Planning
+
+- Create and manage private groups
+- Invite members by email with magic-link sign-in
+- Create events with:
+  - confirmed date and location
+  - confirmed date but location vote options
+  - TBD date with date voting
+- Set potluck flag and trip length in nights
+
+### Voting
+
+- **Date voting**
+  - Members can propose candidate dates
+  - Members vote availability in a grid
+  - Group admin confirms the winning date
+- **Location voting**
+  - Admin can seed location options during event creation/editing with comma-separated names
+  - Admin can also add location options on the event detail page
+  - Members cast one vote per event
+  - Admin confirms the winning location
+
+### Attendance and event detail
+
+- RSVP buttons on event cards and event pages
+- Attendee breakdown on each event page
+- Event detail pages with:
+  - RSVP
+  - date voting
+  - location voting
+  - map link/embed
+  - `.ics` download for that event
+
+### Calendar and forecast
+
+- Homepage views:
+  - `List` view by default
+  - rolling `Week` view starting from today
+  - `Month` view
+- `Export all events` calendar download from the homepage
+- Multi-day weather forecast on event cards in Celsius-first display
 
 ---
 
@@ -37,9 +81,9 @@ Mossy Meetups is a private web app built for music-loving families and friend gr
 
 ### Prerequisites
 
-- Node 20 LTS
+- Node 18 LTS
 - Docker + Docker Compose (for local DB)
-- An SMTP server or Resend account (for magic-link email)
+- A working SMTP server for magic-link email
 
 ### Local setup
 
@@ -56,7 +100,7 @@ cp .env.example .env
 # 3. Start the database
 docker compose up -d db
 
-# 4. Run migrations
+# 4. Run Prisma migrations
 npx prisma migrate dev
 
 # 5. Start the dev server
@@ -64,11 +108,11 @@ npm run dev
 # → http://localhost:3000
 ```
 
-### Docker Compose (full stack)
+### Production-style local run
 
 ```bash
-docker compose up --build
-# App + Postgres start together; migrations run automatically
+npm run build
+node server.js
 ```
 
 ---
@@ -85,6 +129,8 @@ docker compose up --build
 
 Never commit real values. Use a secrets manager or Dokploy environment variable injection.
 
+Note: if your SMTP password contains spaces or special characters, URL-encode it in `EMAIL_SERVER`.
+
 ---
 
 ## Scripts
@@ -92,7 +138,8 @@ Never commit real values. Use a secrets manager or Dokploy environment variable 
 ```bash
 npm run dev          # Start dev server with hot reload
 npm run build        # Production build
-npm run start        # Start production server
+npm run start        # Start Next's default production server
+node server.js       # Start the repo's production custom server
 npm run lint         # ESLint
 npm test             # Vitest unit + integration tests
 npm run test:watch   # Vitest in watch mode
@@ -112,6 +159,7 @@ src/
     api/            REST handlers (groups, events, rsvps, invites, ...)
   styles/           globals.css — CSS custom properties + Tailwind base
   __tests__/        Vitest unit + integration tests
+server.js           Custom production server used by Docker/Dokploy
 
 e2e/                Playwright E2E tests
 prisma/             Schema + migrations
@@ -135,7 +183,7 @@ See [docs/roadmap.md](docs/roadmap.md) for the full phased plan.
 | 4 | WeekView + core UI | done |
 | 5 | Date & location voting + calendar export | done |
 | 6 | Test suite & hardening | done |
-| 7 | Design polish | done |
+| 7 | Design polish + calendar improvements | in progress |
 
 ---
 
@@ -153,9 +201,15 @@ The project uses CSS custom properties for all brand tokens defined in [src/styl
 | `--bg-card` | `rgba(13,28,23,.74)` | `rgba(255,255,255,.9)` | Cards + panels |
 | `--border` | `rgba(243,235,220,.12)` | `rgba(26,26,24,.12)` | Borders |
 
-**Typography:**
-- Display headings — Fraunces (optical sizing, variable weight)
-- Body — Inter
+The app uses CSS custom properties for color, spacing, and radii, with dark mode as the default visual system and a light-theme override via `[data-theme="light"]`.
+
+---
+
+## Notes
+
+- `npm run start` still works, but Docker and Dokploy use `node server.js`
+- Location voting works best when you leave the confirmed `Location` blank and enter comma-separated options instead
+- Events with confirmed dates but unconfirmed locations surface in a dedicated `Needs a location` section on the homepage
 
 ---
 

@@ -36,6 +36,7 @@ function makeEvent(overrides = {}) {
     arrivalDate: new Date("2026-08-01T19:00:00Z"),
     departureDate: null,
     _count: { rsvps: 3, dateProposals: 0, locationOptions: 0 },
+    locationOptions: [],
     rsvps: [{ status: "ATTENDING" }],
     ...overrides,
   };
@@ -170,5 +171,21 @@ describe("getHomePageData", () => {
     const result = await getHomePageData(userId);
     expect(result.tbdEvents[0].id).toBe("e-a");
     expect(result.tbdEvents[1].id).toBe("e-z");
+  });
+
+  it("serializes location option names for edit forms and location-vote cards", async () => {
+    const group = makeGroup({
+      events: [
+        makeEvent({
+          _count: { rsvps: 0, dateProposals: 0, locationOptions: 2 },
+          locationOptions: [{ name: "Turtle Dunes" }, { name: "Pine Ridge" }],
+        }),
+      ],
+    });
+    const prisma = { group: { findMany: vi.fn().mockResolvedValue([group]) } };
+    vi.mocked(hasDatabaseUrl).mockReturnValue(true);
+    vi.mocked(getPrismaClient).mockReturnValue(prisma as ReturnType<typeof getPrismaClient>);
+    const result = await getHomePageData(userId);
+    expect(result.upcomingEvents[0].locationOptionNames).toEqual(["Turtle Dunes", "Pine Ridge"]);
   });
 });

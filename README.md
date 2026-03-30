@@ -98,7 +98,7 @@ cp .env.example .env
 # Edit .env — set DATABASE_URL, NEXTAUTH_URL, NEXTAUTH_SECRET, EMAIL_SERVER, EMAIL_FROM
 
 # 3. Start the database
-docker compose up -d db
+docker-compose up -d db
 
 # 4. Run Prisma migrations
 npx prisma migrate dev
@@ -143,9 +143,11 @@ node server.js       # Start the repo's production custom server
 npm run lint         # ESLint
 npm test             # Vitest unit + integration tests
 npm run test:watch   # Vitest in watch mode
-npm run test:e2e     # Playwright E2E tests
+npm run test:e2e     # Playwright E2E tests with isolated Postgres + MailHog
 npm run prisma:generate   # Regenerate Prisma client
 ```
+
+`npm run test:e2e` does not depend on your checked-in `.env` database host. It boots an isolated Postgres test database on `127.0.0.1:54329`, a MailHog SMTP sink on `127.0.0.1:3025`, resets the schema, and then runs Playwright against a local dev server with those env vars injected.
 
 ---
 
@@ -166,24 +168,6 @@ prisma/             Schema + migrations
 branding/           Brand guidelines
 docs/               Roadmap + architecture notes
 ```
-
----
-
-## Roadmap
-
-See [docs/roadmap.md](docs/roadmap.md) for the full phased plan.
-
-| Phase | Goal | Status |
-|---|---|---|
-| 0 | Deployment stable | done |
-| 1 | Magic-link auth | done |
-| 1.5 | User profiles | done |
-| 2 | Group membership + invites | done |
-| 3 | RSVP flow | done |
-| 4 | WeekView + core UI | done |
-| 5 | Date & location voting + calendar export | done |
-| 6 | Test suite & hardening | done |
-| 7 | Design polish + calendar improvements | in progress |
 
 ---
 

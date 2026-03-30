@@ -1,0 +1,17 @@
+version: "3.9"
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: MossyMeetupsUser
+      POSTGRES_PASSWORD: changeme
+      POSTGRES_DB: mossymeetups_e2e
+    ports:
+      - "54329:5432"
+  mailhog:
+    image: mailhog/mailhog:v1.0.1
+    restart: unless-stopped
+    ports:
+      - "3025:1025"
+      - "8026:8025"

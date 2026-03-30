@@ -97,7 +97,7 @@ describe("POST /api/events", () => {
     );
   });
 
-  it("parses valid arrivalDate and departureDate", async () => {
+  it("parses valid arrivalDate and calculates departureDate from nights", async () => {
     const event = { id: "e-1", arrivalDate: new Date("2026-08-01T19:00:00Z") };
     const prisma = { event: { create: vi.fn().mockResolvedValue(event) } };
     vi.mocked(getServerSession).mockResolvedValue(mockSession);
@@ -108,7 +108,7 @@ describe("POST /api/events", () => {
         groupId: "g-1",
         title: "Event",
         arrivalDate: "2026-08-01T19:00:00Z",
-        departureDate: "2026-08-03T12:00:00Z",
+        nights: 2,
       },
     });
     const res = mockRes();
@@ -117,10 +117,55 @@ describe("POST /api/events", () => {
       expect.objectContaining({
         data: expect.objectContaining({
           arrivalDate: new Date("2026-08-01T19:00:00Z"),
-          departureDate: new Date("2026-08-03T12:00:00Z"),
+          departureDate: new Date("2026-08-03T19:00:00Z"),
         }),
       }),
     );
+  });
+
+  it("creates location vote options when passed as comma-separated names", async () => {
+    const prisma = { event: { create: vi.fn().mockResolvedValue({ id: "e-1" }) } };
+    vi.mocked(getServerSession).mockResolvedValue(mockSession);
+    vi.mocked(hasDatabaseUrl).mockReturnValue(true);
+    vi.mocked(getPrismaClient).mockReturnValue(prisma as ReturnType<typeof getPrismaClient>);
+    const req = mockReq({
+      body: {
+        groupId: "g-1",
+        title: "Vote on campsite",
+        locationOptions: "Turtle Dunes, Pine Ridge, Turtle Dunes",
+      },
+    });
+    const res = mockRes();
+    await handler(req, res);
+    expect(prisma.event.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          locationOptions: {
+            create: [
+              { name: "Turtle Dunes", createdBy: "user-1" },
+              { name: "Pine Ridge", createdBy: "user-1" },
+            ],
+          },
+        }),
+      }),
+    );
+  });
+
+  it("returns 400 when both confirmed location and vote options are submitted", async () => {
+    vi.mocked(getServerSession).mockResolvedValue(mockSession);
+    vi.mocked(hasDatabaseUrl).mockReturnValue(true);
+    vi.mocked(getPrismaClient).mockReturnValue({} as ReturnType<typeof getPrismaClient>);
+    const req = mockReq({
+      body: {
+        groupId: "g-1",
+        title: "Event",
+        location: "North Grove",
+        locationOptions: "Turtle Dunes, Pine Ridge",
+      },
+    });
+    const res = mockRes();
+    await handler(req, res);
+    expect(res.statusCode).toBe(400);
   });
 
   it("passes null when arrivalDate is empty string", async () => {

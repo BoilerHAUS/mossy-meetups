@@ -17,6 +17,10 @@ export default function GroupPage({ group, isAdmin, userId, sidebarGroups }: Pro
   const [localEvents, setLocalEvents] = useState(group.events.filter((e) => e.arrivalDate !== null));
   const tbdEvents = group.events.filter((e) => e.arrivalDate === null);
   const [inviteEmail, setInviteEmail] = useState("");
+  const [joinState, setJoinState] = useState<{ loading: boolean; error: string | null }>({
+    loading: false,
+    error: null,
+  });
   const [inviteState, setInviteState] = useState<{ loading: boolean; error: string | null; sent: boolean }>(
     { loading: false, error: null, sent: false }
   );
@@ -82,6 +86,17 @@ export default function GroupPage({ group, isAdmin, userId, sidebarGroups }: Pro
     setInviteState({ loading: false, error: null, sent: true });
   }
 
+  async function handleJoinGroup() {
+    setJoinState({ loading: true, error: null });
+    const response = await fetch(`/api/groups/${group.id}/join`, { method: "POST" });
+    if (!response.ok) {
+      const payload = await response.json().catch(() => ({ error: "Failed to join group" }));
+      setJoinState({ loading: false, error: payload.error || "Failed to join group" });
+      return;
+    }
+    router.replace(router.asPath);
+  }
+
   return (
     <AppShell title={group.name} groups={sidebarGroups}>
       <header className="group-header">
@@ -114,6 +129,19 @@ export default function GroupPage({ group, isAdmin, userId, sidebarGroups }: Pro
         )}
         <div className="header-row">
           <p className="meta">Hosted by {group.adminName}</p>
+          {!isAdmin && !group.isMember ? (
+            <div className="join-wrap">
+              <button
+                type="button"
+                className="btn-join"
+                onClick={handleJoinGroup}
+                disabled={joinState.loading}
+              >
+                {joinState.loading ? "Joining…" : "Join group"}
+              </button>
+              {joinState.error ? <p className="join-error">{joinState.error}</p> : null}
+            </div>
+          ) : null}
           {isAdmin && !showEditForm ? (
             <div className="admin-actions">
               <button
@@ -316,10 +344,18 @@ export default function GroupPage({ group, isAdmin, userId, sidebarGroups }: Pro
           margin-left: auto;
         }
 
+        .join-wrap {
+          margin-left: auto;
+          display: grid;
+          justify-items: end;
+          gap: 6px;
+        }
+
         .btn-edit,
         .btn-delete,
         .btn-save,
-        .btn-cancel {
+        .btn-cancel,
+        .btn-join {
           font: inherit;
           font-size: 0.82rem;
           border-radius: 999px;
@@ -336,6 +372,18 @@ export default function GroupPage({ group, isAdmin, userId, sidebarGroups }: Pro
 
         .btn-edit:hover {
           background: rgba(215, 185, 127, 0.2);
+        }
+
+        .btn-join {
+          background: linear-gradient(135deg, #d7b97f, #b98545);
+          color: #10231d;
+          border: 0;
+          font-weight: 700;
+        }
+
+        .btn-join:disabled {
+          opacity: 0.7;
+          cursor: wait;
         }
 
         .btn-delete {
@@ -392,6 +440,12 @@ export default function GroupPage({ group, isAdmin, userId, sidebarGroups }: Pro
           background: transparent;
           color: #c9c2b3;
           border-color: rgba(243, 235, 220, 0.2);
+        }
+
+        .join-error {
+          margin: 0;
+          color: #f0a090;
+          font-size: 0.82rem;
         }
 
         .content-grid {
@@ -593,12 +647,6 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       },
     }),
     prisma.group.findMany({
-      where: {
-        OR: [
-          { adminId: session.user.id },
-          { invites: { some: { userId: session.user.id, usedAt: { not: null } } } },
-        ],
-      },
       select: { id: true, name: true },
       orderBy: { createdAt: "desc" },
     }),
@@ -608,7 +656,6 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
   const isAdmin = group.adminId === session.user.id;
   const isMember = group.invites.some((inv) => inv.userId === session.user.id && inv.usedAt !== null);
-  if (!isAdmin && !isMember) return { redirect: { destination: "/", permanent: false } };
 
   const acceptedMembers = group.invites
     .filter((inv) => inv.usedAt !== null && inv.user)
@@ -640,6 +687,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       group: {
         id: group.id,
         name: group.name,
+        isMember,
         adminName: group.admin.name || group.admin.email,
         members: [adminMember, ...acceptedMembers],
         pendingInvites,

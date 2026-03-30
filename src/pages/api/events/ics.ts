@@ -48,12 +48,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const events = await prisma.event.findMany({
     where: {
       arrivalDate: { not: null },
-      group: {
-        OR: [
-          { adminId: session.user.id },
-          { invites: { some: { userId: session.user.id, usedAt: { not: null } } } },
-        ],
-      },
     },
     select: {
       id: true,

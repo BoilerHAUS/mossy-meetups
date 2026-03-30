@@ -81,7 +81,12 @@ describe("POST /api/events", () => {
       departureDate: null,
       createdAt: new Date(),
     };
-    const prisma = { event: { create: vi.fn().mockResolvedValue(event) } };
+    const prisma = {
+      group: {
+        findUnique: vi.fn().mockResolvedValue({ adminId: "user-1", invites: [] }),
+      },
+      event: { create: vi.fn().mockResolvedValue(event) },
+    };
     vi.mocked(getServerSession).mockResolvedValue(mockSession);
     vi.mocked(hasDatabaseUrl).mockReturnValue(true);
     vi.mocked(getPrismaClient).mockReturnValue(prisma as ReturnType<typeof getPrismaClient>);
@@ -99,7 +104,12 @@ describe("POST /api/events", () => {
 
   it("parses valid arrivalDate and calculates departureDate from nights", async () => {
     const event = { id: "e-1", arrivalDate: new Date("2026-08-01T19:00:00Z") };
-    const prisma = { event: { create: vi.fn().mockResolvedValue(event) } };
+    const prisma = {
+      group: {
+        findUnique: vi.fn().mockResolvedValue({ adminId: "user-1", invites: [] }),
+      },
+      event: { create: vi.fn().mockResolvedValue(event) },
+    };
     vi.mocked(getServerSession).mockResolvedValue(mockSession);
     vi.mocked(hasDatabaseUrl).mockReturnValue(true);
     vi.mocked(getPrismaClient).mockReturnValue(prisma as ReturnType<typeof getPrismaClient>);
@@ -124,7 +134,12 @@ describe("POST /api/events", () => {
   });
 
   it("creates location vote options when passed as comma-separated names", async () => {
-    const prisma = { event: { create: vi.fn().mockResolvedValue({ id: "e-1" }) } };
+    const prisma = {
+      group: {
+        findUnique: vi.fn().mockResolvedValue({ adminId: "user-1", invites: [] }),
+      },
+      event: { create: vi.fn().mockResolvedValue({ id: "e-1" }) },
+    };
     vi.mocked(getServerSession).mockResolvedValue(mockSession);
     vi.mocked(hasDatabaseUrl).mockReturnValue(true);
     vi.mocked(getPrismaClient).mockReturnValue(prisma as ReturnType<typeof getPrismaClient>);
@@ -169,7 +184,12 @@ describe("POST /api/events", () => {
   });
 
   it("passes null when arrivalDate is empty string", async () => {
-    const prisma = { event: { create: vi.fn().mockResolvedValue({ id: "e-1" }) } };
+    const prisma = {
+      group: {
+        findUnique: vi.fn().mockResolvedValue({ adminId: "user-1", invites: [] }),
+      },
+      event: { create: vi.fn().mockResolvedValue({ id: "e-1" }) },
+    };
     vi.mocked(getServerSession).mockResolvedValue(mockSession);
     vi.mocked(hasDatabaseUrl).mockReturnValue(true);
     vi.mocked(getPrismaClient).mockReturnValue(prisma as ReturnType<typeof getPrismaClient>);
@@ -185,6 +205,9 @@ describe("POST /api/events", () => {
 
   it("returns 500 when Prisma throws", async () => {
     const prisma = {
+      group: {
+        findUnique: vi.fn().mockResolvedValue({ adminId: "user-1", invites: [] }),
+      },
       event: { create: vi.fn().mockRejectedValue(new Error("connection lost")) },
     };
     vi.mocked(getServerSession).mockResolvedValue(mockSession);
@@ -194,5 +217,24 @@ describe("POST /api/events", () => {
     const res = mockRes();
     await handler(req, res);
     expect(res.statusCode).toBe(500);
+  });
+
+  it("returns 403 when the user has not joined the group", async () => {
+    const prisma = {
+      group: {
+        findUnique: vi.fn().mockResolvedValue({ adminId: "other-user", invites: [] }),
+      },
+      event: { create: vi.fn() },
+    };
+    vi.mocked(getServerSession).mockResolvedValue(mockSession);
+    vi.mocked(hasDatabaseUrl).mockReturnValue(true);
+    vi.mocked(getPrismaClient).mockReturnValue(prisma as ReturnType<typeof getPrismaClient>);
+
+    const req = mockReq({ body: { groupId: "g-1", title: "Secret Show" } });
+    const res = mockRes();
+    await handler(req, res);
+
+    expect(res.statusCode).toBe(403);
+    expect(prisma.event.create).not.toHaveBeenCalled();
   });
 });

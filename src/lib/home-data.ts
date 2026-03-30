@@ -7,6 +7,8 @@ type HomeGroup = {
   adminName: string;
   adminEmail: string;
   eventCount: number;
+  isAdmin: boolean;
+  isMember: boolean;
 };
 
 export type HomeEvent = {
@@ -63,14 +65,12 @@ export async function getHomePageData(userId: string): Promise<HomePageData> {
     }
 
     const groups = await prisma.group.findMany({
-      where: {
-        OR: [
-          { adminId: userId },
-          { invites: { some: { userId, usedAt: { not: null } } } },
-        ],
-      },
       include: {
         admin: true,
+        invites: {
+          where: { userId, usedAt: { not: null } },
+          select: { id: true },
+        },
         events: {
           include: {
             _count: {
@@ -110,6 +110,8 @@ export async function getHomePageData(userId: string): Promise<HomePageData> {
       adminName: group.admin.name || "Unnamed host",
       adminEmail: group.admin.email,
       eventCount: group.events.length,
+      isAdmin: group.adminId === userId,
+      isMember: group.invites.length > 0,
     }));
 
     const allEvents: HomeEvent[] = groups.flatMap((group) =>

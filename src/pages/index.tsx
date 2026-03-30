@@ -65,10 +65,11 @@ function formatDate(value: string | null) {
 }
 
 export default function Home({ databaseReady, databaseMessage, groups, upcomingEvents, tbdEvents, userId }: Props) {
+  const creatableGroups = groups.filter((group) => group.isAdmin || group.isMember);
   const [groupForm, setGroupForm] = useState(initialGroupForm);
   const [eventForm, setEventForm] = useState({
     ...initialEventForm,
-    groupId: groups[0]?.id || "",
+    groupId: creatableGroups[0]?.id || "",
   });
   const [groupState, setGroupState] = useState<{ loading: boolean; error: string | null }>({ loading: false, error: null });
   const [eventState, setEventState] = useState<{ loading: boolean; error: string | null }>({ loading: false, error: null });
@@ -240,7 +241,7 @@ export default function Home({ databaseReady, databaseMessage, groups, upcomingE
       setEventState({ loading: false, error: payload.error || "Failed to create event" });
       return;
     }
-    setEventForm({ ...initialEventForm, groupId: groups[0]?.id || "" });
+    setEventForm({ ...initialEventForm, groupId: creatableGroups[0]?.id || "" });
     window.location.reload();
   }
 
@@ -358,14 +359,23 @@ export default function Home({ databaseReady, databaseMessage, groups, upcomingE
                 <select
                   value={eventForm.groupId}
                   onChange={(e) => setEventForm((f) => ({ ...f, groupId: e.target.value }))}
-                  disabled={groups.length === 0}
+                  disabled={creatableGroups.length === 0}
                   required
                 >
                   <option value="">Select a group</option>
-                  {groups.map((g) => (
+                  {creatableGroups.map((g) => (
                     <option key={g.id} value={g.id}>{g.name}</option>
                   ))}
                 </select>
+                {creatableGroups.length === 0 ? (
+                  <span className="field-hint">
+                    Join a group first, or create one of your own, before posting an event.
+                  </span>
+                ) : (
+                  <span className="field-hint">
+                    Only groups you&apos;ve joined can be used for new events.
+                  </span>
+                )}
               </label>
               <label>
                 Event title
@@ -460,7 +470,7 @@ export default function Home({ databaseReady, databaseMessage, groups, upcomingE
                 Potluck — everyone brings a dish
               </label>
               {eventState.error ? <p className="form-error">{eventState.error}</p> : null}
-              <button type="submit" disabled={eventState.loading || groups.length === 0}>
+              <button type="submit" disabled={eventState.loading || creatableGroups.length === 0}>
                 {eventState.loading ? "Creating…" : "Create event"}
               </button>
             </form>

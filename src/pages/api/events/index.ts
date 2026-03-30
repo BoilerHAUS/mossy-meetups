@@ -74,6 +74,28 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       return res.status(503).json({ error: "DATABASE_URL is not configured" });
     }
 
+    const group = await prisma.group.findUnique({
+      where: { id: payload.groupId.trim() },
+      select: {
+        adminId: true,
+        invites: {
+          where: { userId: session.user.id, usedAt: { not: null } },
+          select: { id: true },
+        },
+      },
+    });
+
+    if (!group) {
+      return res.status(404).json({ error: "Group not found" });
+    }
+
+    const canCreateEvent =
+      group.adminId === session.user.id || group.invites.length > 0;
+
+    if (!canCreateEvent) {
+      return res.status(403).json({ error: "Join this group before creating an event" });
+    }
+
     const event = await prisma.event.create({
       data: {
         groupId: payload.groupId.trim(),

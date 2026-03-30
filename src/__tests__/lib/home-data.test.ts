@@ -20,6 +20,7 @@ function makeGroup(overrides = {}) {
     name: "Camp Crew",
     adminId: userId,
     admin: { id: userId, name: "Alex", email: "alex@example.com" },
+    invites: [],
     events: [],
     ...overrides,
   };
@@ -96,6 +97,8 @@ describe("getHomePageData", () => {
       adminName: "Alex",
       adminEmail: "alex@example.com",
       eventCount: 0,
+      isAdmin: true,
+      isMember: false,
     });
   });
 
@@ -187,5 +190,27 @@ describe("getHomePageData", () => {
     vi.mocked(getPrismaClient).mockReturnValue(prisma as ReturnType<typeof getPrismaClient>);
     const result = await getHomePageData(userId);
     expect(result.upcomingEvents[0].locationOptionNames).toEqual(["Turtle Dunes", "Pine Ridge"]);
+  });
+
+  it("includes groups created by other people so discovery is public", async () => {
+    const publicGroup = makeGroup({
+      id: "g-2",
+      adminId: "other-user",
+      admin: { id: "other-user", name: "Morgan", email: "morgan@example.com" },
+      invites: [],
+    });
+    const prisma = { group: { findMany: vi.fn().mockResolvedValue([publicGroup]) } };
+    vi.mocked(hasDatabaseUrl).mockReturnValue(true);
+    vi.mocked(getPrismaClient).mockReturnValue(prisma as ReturnType<typeof getPrismaClient>);
+
+    const result = await getHomePageData(userId);
+
+    expect(result.groups).toHaveLength(1);
+    expect(result.groups[0]).toMatchObject({
+      id: "g-2",
+      adminName: "Morgan",
+      isAdmin: false,
+      isMember: false,
+    });
   });
 });

@@ -17,7 +17,7 @@ export function GroupSidebar({ groups }: GroupSidebarProps) {
 
   return (
     <aside className="sidebar">
-      <p className="sidebar-label">Your groups</p>
+      <p className="sidebar-label">All groups</p>
       {groups.length === 0 ? (
         <p className="sidebar-empty">No groups yet</p>
       ) : (

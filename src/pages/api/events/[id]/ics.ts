@@ -3,7 +3,6 @@ import type { NextApiRequest, NextApiResponse } from "next";
 
 import { getAuthOptions } from "../../../../lib/auth";
 import { getPrismaClient } from "../../../../lib/prisma";
-import { resolveEventMembership } from "../../../../lib/membership";
 
 function icsDate(date: Date): string {
   return date.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
@@ -52,17 +51,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(400).json({ error: "Invalid event ID" });
   }
 
-  const membership = await resolveEventMembership(prisma, id, session.user.id);
-  if (!membership) {
-    return res.status(404).json({ error: "Event not found" });
-  }
-  if (!membership.isAdmin && !membership.isMember) {
-    return res.status(403).json({ error: "Forbidden" });
-  }
-  if (!membership.event.arrivalDate) {
-    return res.status(400).json({ error: "Event does not have a confirmed date yet" });
-  }
-
   const event = await prisma.event.findUnique({
     where: { id },
     select: {
@@ -76,8 +64,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     },
   });
 
-  if (!event || !event.arrivalDate) {
+  if (!event) {
     return res.status(404).json({ error: "Event not found" });
+  }
+  if (!event.arrivalDate) {
+    return res.status(400).json({ error: "Event does not have a confirmed date yet" });
   }
 
   const now = new Date();

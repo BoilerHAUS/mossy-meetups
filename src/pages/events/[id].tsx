@@ -39,6 +39,7 @@ export default function EventPage({
   userId,
   userRsvpStatus,
   isAdmin,
+  isMember,
   dateProposals,
   locationOptions,
   comments,
@@ -229,6 +230,11 @@ export default function EventPage({
               initialStatus={userRsvpStatus as RSVPStatus | null}
               onStatusChange={handleStatusChange}
             />
+            {!isAdmin && !isMember ? (
+              <p className="membership-hint">
+                RSVP Going or Maybe to join this group and unlock planning tools.
+              </p>
+            ) : null}
             <div className="rsvp-divider" />
             <ShareEventButton
               eventId={event.id}
@@ -478,6 +484,13 @@ export default function EventPage({
           margin-bottom: 14px;
         }
 
+        .membership-hint {
+          margin: 10px 0 0;
+          color: #c9c2b3;
+          font-size: 0.84rem;
+          line-height: 1.5;
+        }
+
         .rsvp-divider {
           height: 1px;
           background: rgba(243, 235, 220, 0.08);
@@ -650,12 +663,6 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       },
     }),
     prisma.group.findMany({
-      where: {
-        OR: [
-          { adminId: session.user.id },
-          { invites: { some: { userId: session.user.id, usedAt: { not: null } } } },
-        ],
-      },
       select: { id: true, name: true },
       orderBy: { createdAt: "desc" },
     }),
@@ -669,10 +676,6 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   const isMember = event.group.invites.some(
     (inv) => inv.userId === session.user.id && inv.usedAt !== null
   );
-
-  if (!isAdmin && !isMember) {
-    return { redirect: { destination: "/", permanent: false } };
-  }
 
   const userRsvp = event.rsvps.find((r) => r.userId === session.user.id);
 
@@ -695,6 +698,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       sidebarGroups: userGroups,
       userId: session.user.id,
       isAdmin,
+      isMember,
       userRsvpStatus: userRsvp?.status ?? null,
       userLocationVoteId: event.locationVotes[0]?.locationOptionId ?? null,
       dateProposals: event.dateProposals.map((p) => ({

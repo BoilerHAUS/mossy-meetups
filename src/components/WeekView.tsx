@@ -1,37 +1,38 @@
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+
+interface WeatherPreview {
+  condition: string;
+  temperatureC: number;
+}
 
 export interface WeekEvent {
   id: string;
   title: string;
   groupName: string;
-  arrivalDate: string; // ISO string, non-null (TBD events go elsewhere)
+  arrivalDate: string;
+  location: string | null;
 }
 
 interface WeekViewProps {
   events: WeekEvent[];
 }
 
-const DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-const DAY_NAMES_FULL = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-/** Monday of the ISO week containing `date` */
-function getMonday(date: Date): Date {
-  const d = new Date(date);
-  const day = d.getDay(); // 0=Sun
-  const diff = day === 0 ? -6 : 1 - day;
-  d.setDate(d.getDate() + diff);
-  d.setHours(0, 0, 0, 0);
-  return d;
+function startOfDay(date: Date) {
+  const next = new Date(date);
+  next.setHours(0, 0, 0, 0);
+  return next;
 }
 
-function addDays(date: Date, n: number): Date {
-  const d = new Date(date);
-  d.setDate(d.getDate() + n);
-  return d;
+function addDays(date: Date, count: number) {
+  const next = new Date(date);
+  next.setDate(next.getDate() + count);
+  return next;
 }
 
-function sameDay(a: Date, b: Date): boolean {
+function sameDay(a: Date, b: Date) {
   return (
     a.getFullYear() === b.getFullYear() &&
     a.getMonth() === b.getMonth() &&
@@ -39,82 +40,158 @@ function sameDay(a: Date, b: Date): boolean {
   );
 }
 
-function formatWeekLabel(monday: Date): string {
-  const sunday = addDays(monday, 6);
+function formatRangeLabel(start: Date) {
+  const end = addDays(start, 6);
   const opts: Intl.DateTimeFormatOptions = { month: "short", day: "numeric" };
-  const fmt = (d: Date) => new Intl.DateTimeFormat("en-CA", opts).format(d);
-  if (monday.getFullYear() !== sunday.getFullYear()) {
-    return `${fmt(monday)}, ${monday.getFullYear()} – ${fmt(sunday)}, ${sunday.getFullYear()}`;
+  const fmt = (date: Date) => new Intl.DateTimeFormat("en-CA", opts).format(date);
+  if (start.getFullYear() !== end.getFullYear()) {
+    return `${fmt(start)}, ${start.getFullYear()} – ${fmt(end)}, ${end.getFullYear()}`;
   }
-  if (monday.getMonth() !== sunday.getMonth()) {
-    return `${fmt(monday)} – ${fmt(sunday)}, ${sunday.getFullYear()}`;
-  }
-  return `${new Intl.DateTimeFormat("en-CA", { month: "long" }).format(monday)} ${monday.getDate()}–${sunday.getDate()}, ${monday.getFullYear()}`;
+  return `${fmt(start)} – ${fmt(end)}, ${end.getFullYear()}`;
 }
 
-function formatDayNum(date: Date): string {
-  return new Intl.DateTimeFormat("en-CA", { day: "numeric", month: "short" }).format(date);
+function formatDayNum(date: Date) {
+  return new Intl.DateTimeFormat("en-CA", { month: "short", day: "numeric" }).format(date);
 }
 
-function formatEventTime(iso: string): string {
+function formatEventTime(iso: string) {
   return new Intl.DateTimeFormat("en-CA", { timeStyle: "short" }).format(new Date(iso));
 }
 
-export function WeekView({ events }: WeekViewProps) {
-  // today is null on the server; set client-side in useEffect to avoid timezone hydration mismatch
-  const [today, setToday] = useState<Date | null>(null);
-  const [monday, setMonday] = useState(() => getMonday(new Date()));
-  const [activeDayIndex, setActiveDayIndex] = useState(0); // mobile: which day is showing
+function weatherEmoji(condition: string) {
+  switch (condition) {
+    case "sunny":
+      return "☀";
+    case "partly-cloudy":
+      return "⛅";
+    case "cloudy":
+    case "foggy":
+      return "☁";
+    case "rainy":
+      return "🌧";
+    case "stormy":
+      return "⛈";
+    case "snowy":
+      return "❄";
+    default:
+      return "•";
+  }
+}
+
+function WeatherGlyph({ location, arrivalDate }: { location: string | null; arrivalDate: string }) {
+  const [weather, setWeather] = useState<WeatherPreview | null>(null);
 
   useEffect(() => {
-    const t = new Date();
-    setToday(t);
-    setMonday(getMonday(t)); // correct to client's current week
+    if (!location) return;
+
+    const params = new URLSearchParams({
+      location,
+      date: arrivalDate.slice(0, 10),
+    });
+
+    fetch(`/api/weather?${params}`)
+      .then((response) => (response.ok ? response.json() : null))
+      .then((json) => {
+        if (json?.success && Array.isArray(json.data) && json.data[0]) {
+          setWeather({
+            condition: json.data[0].condition,
+            temperatureC: json.data[0].temperatureC,
+          });
+        }
+      })
+      .catch(() => null);
+  }, [location, arrivalDate]);
+
+  if (!weather) return null;
+
+  return (
+    <span
+      className="wv-weather"
+      title={`${weather.condition} · ${weather.temperatureC}°C`}
+      aria-label={`${weather.condition} ${weather.temperatureC} degrees Celsius`}
+    >
+      {weatherEmoji(weather.condition)}
+      <style jsx>{`
+        .wv-weather {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 20px;
+          height: 20px;
+          border-radius: 999px;
+          background: rgba(243, 235, 220, 0.08);
+          font-size: 0.78rem;
+          flex-shrink: 0;
+        }
+      `}</style>
+    </span>
+  );
+}
+
+export function WeekView({ events }: WeekViewProps) {
+  const [today, setToday] = useState<Date | null>(null);
+  const [startDate, setStartDate] = useState(() => startOfDay(new Date()));
+  const [activeDayIndex, setActiveDayIndex] = useState(0);
+
+  useEffect(() => {
+    const currentDay = startOfDay(new Date());
+    setToday(currentDay);
+    setStartDate(currentDay);
+    setActiveDayIndex(0);
   }, []);
 
-  const days = Array.from({ length: 7 }, (_, i) => addDays(monday, i));
-  const weekLabel = formatWeekLabel(monday);
+  const days = Array.from({ length: 7 }, (_, index) => addDays(startDate, index));
+  const rangeLabel = formatRangeLabel(startDate);
+  const isTodayWindow = today ? sameDay(startDate, today) : false;
 
-  function prevWeek() { setMonday((m) => addDays(m, -7)); }
-  function nextWeek() { setMonday((m) => addDays(m, 7)); }
-  function goToday() {
-    const newMonday = getMonday(today);
-    setMonday(newMonday);
-    const todayIdx = days.findIndex((d) => sameDay(d, today));
-    setActiveDayIndex(todayIdx >= 0 ? todayIdx : 0);
+  function previousWindow() {
+    setStartDate((current) => startOfDay(addDays(current, -7)));
+    setActiveDayIndex(0);
   }
 
-  function eventsForDay(day: Date): WeekEvent[] {
-    return events.filter((e) => sameDay(new Date(e.arrivalDate), day));
+  function nextWindow() {
+    setStartDate((current) => startOfDay(addDays(current, 7)));
+    setActiveDayIndex(0);
   }
 
-  const isThisWeek = today ? sameDay(monday, getMonday(today)) : false;
+  function jumpToToday() {
+    if (!today) return;
+    setStartDate(today);
+    setActiveDayIndex(0);
+  }
+
+  function eventsForDay(day: Date) {
+    return events.filter((event) => sameDay(new Date(event.arrivalDate), day));
+  }
 
   return (
     <div className="wv-root">
-      {/* Week navigation */}
       <div className="wv-nav">
         <div className="wv-nav-left">
-          <button type="button" className="wv-arrow" onClick={prevWeek} aria-label="Previous week">←</button>
-          <span className="wv-label">{weekLabel}</span>
-          <button type="button" className="wv-arrow" onClick={nextWeek} aria-label="Next week">→</button>
+          <button type="button" className="wv-arrow" onClick={previousWindow} aria-label="Previous 7 days">
+            ←
+          </button>
+          <span className="wv-label">{rangeLabel}</span>
+          <button type="button" className="wv-arrow" onClick={nextWindow} aria-label="Next 7 days">
+            →
+          </button>
         </div>
-        {!isThisWeek ? (
-          <button type="button" className="wv-today-btn" onClick={goToday}>
+        {!isTodayWindow ? (
+          <button type="button" className="wv-today-btn" onClick={jumpToToday}>
             Today
           </button>
         ) : null}
       </div>
 
-      {/* Desktop: 7-column grid */}
       <div className="wv-grid">
-        {days.map((day, i) => {
+        {days.map((day) => {
           const dayEvents = eventsForDay(day);
           const isToday = today ? sameDay(day, today) : false;
+
           return (
-            <div key={i} className={`wv-col ${isToday ? "wv-col--today" : ""}`}>
+            <div key={day.toISOString()} className={`wv-col ${isToday ? "wv-col--today" : ""}`}>
               <div className="wv-col-header">
-                <span className="wv-day-name">{DAY_NAMES[i]}</span>
+                <span className="wv-day-name">{DAY_NAMES[day.getDay()]}</span>
                 <span className={`wv-day-num ${isToday ? "wv-day-num--today" : ""}`}>
                   {formatDayNum(day)}
                 </span>
@@ -123,11 +200,16 @@ export function WeekView({ events }: WeekViewProps) {
                 {dayEvents.length === 0 ? (
                   <div className="wv-empty" />
                 ) : (
-                  dayEvents.map((ev) => (
-                    <Link key={ev.id} href={`/events/${ev.id}`} className="wv-event">
-                      <span className="wv-event-title">{ev.title}</span>
-                      <span suppressHydrationWarning className="wv-event-meta">{formatEventTime(ev.arrivalDate)}</span>
-                      <span className="wv-event-group">{ev.groupName}</span>
+                  dayEvents.map((event) => (
+                    <Link key={event.id} href={`/events/${event.id}`} className="wv-event">
+                      <div className="wv-event-top">
+                        <span className="wv-event-title">{event.title}</span>
+                        <WeatherGlyph location={event.location} arrivalDate={event.arrivalDate} />
+                      </div>
+                      <span suppressHydrationWarning className="wv-event-meta">
+                        {formatEventTime(event.arrivalDate)}
+                      </span>
+                      <span className="wv-event-group">{event.groupName}</span>
                     </Link>
                   ))
                 )}
@@ -137,24 +219,24 @@ export function WeekView({ events }: WeekViewProps) {
         })}
       </div>
 
-      {/* Mobile: single-day view with day tabs */}
       <div className="wv-mobile">
         <div className="wv-day-tabs">
-          {days.map((day, i) => {
+          {days.map((day, index) => {
             const isToday = today ? sameDay(day, today) : false;
             const hasEvents = eventsForDay(day).length > 0;
+
             return (
               <button
-                key={i}
+                key={day.toISOString()}
                 type="button"
                 className={[
                   "wv-day-tab",
-                  activeDayIndex === i ? "wv-day-tab--active" : "",
+                  activeDayIndex === index ? "wv-day-tab--active" : "",
                   isToday ? "wv-day-tab--today" : "",
                 ].join(" ")}
-                onClick={() => setActiveDayIndex(i)}
+                onClick={() => setActiveDayIndex(index)}
               >
-                <span className="wv-tab-name">{DAY_NAMES[i]}</span>
+                <span className="wv-tab-name">{DAY_NAMES[day.getDay()]}</span>
                 <span className="wv-tab-num">{day.getDate()}</span>
                 {hasEvents ? <span className="wv-tab-dot" /> : null}
               </button>
@@ -163,15 +245,18 @@ export function WeekView({ events }: WeekViewProps) {
         </div>
 
         <div className="wv-mobile-day">
-          <p className="wv-mobile-day-label">{DAY_NAMES_FULL[activeDayIndex]}, {formatDayNum(days[activeDayIndex])}</p>
+          <p className="wv-mobile-day-label">{formatDayNum(days[activeDayIndex])}</p>
           {eventsForDay(days[activeDayIndex]).length === 0 ? (
             <p className="wv-mobile-empty">No events this day</p>
           ) : (
-            eventsForDay(days[activeDayIndex]).map((ev) => (
-              <Link key={ev.id} href={`/events/${ev.id}`} className="wv-mobile-event">
-                <span className="wv-event-title">{ev.title}</span>
+            eventsForDay(days[activeDayIndex]).map((event) => (
+              <Link key={event.id} href={`/events/${event.id}`} className="wv-mobile-event">
+                <div className="wv-event-top">
+                  <span className="wv-event-title">{event.title}</span>
+                  <WeatherGlyph location={event.location} arrivalDate={event.arrivalDate} />
+                </div>
                 <span className="wv-event-meta">
-                  {formatEventTime(ev.arrivalDate)} · {ev.groupName}
+                  {formatEventTime(event.arrivalDate)} · {event.groupName}
                 </span>
               </Link>
             ))
@@ -184,7 +269,6 @@ export function WeekView({ events }: WeekViewProps) {
           width: 100%;
         }
 
-        /* ── Navigation ── */
         .wv-nav {
           display: flex;
           align-items: center;
@@ -232,12 +316,6 @@ export function WeekView({ events }: WeekViewProps) {
           cursor: pointer;
         }
 
-        .wv-today-btn:hover {
-          border-color: rgba(243, 235, 220, 0.4);
-          color: #f3ebdc;
-        }
-
-        /* ── Desktop grid ── */
         .wv-grid {
           display: grid;
           grid-template-columns: repeat(7, minmax(0, 1fr));
@@ -294,18 +372,27 @@ export function WeekView({ events }: WeekViewProps) {
           height: 80px;
         }
 
-        .wv-event {
+        :global(a.wv-event),
+        :global(a.wv-mobile-event) {
           display: block;
           background: rgba(215, 185, 127, 0.1);
           border: 1px solid rgba(215, 185, 127, 0.2);
-          border-radius: 8px;
-          padding: 5px 7px;
+          border-radius: 10px;
+          padding: 8px 10px;
           text-decoration: none;
           transition: background 0.15s;
         }
 
-        .wv-event:hover {
+        :global(a.wv-event:hover),
+        :global(a.wv-mobile-event:hover) {
           background: rgba(215, 185, 127, 0.18);
+        }
+
+        .wv-event-top {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 6px;
         }
 
         .wv-event-title {
@@ -322,7 +409,7 @@ export function WeekView({ events }: WeekViewProps) {
           display: block;
           font-size: 0.68rem;
           color: #8a847a;
-          margin-top: 1px;
+          margin-top: 2px;
         }
 
         .wv-event-group {
@@ -335,7 +422,6 @@ export function WeekView({ events }: WeekViewProps) {
           text-overflow: ellipsis;
         }
 
-        /* ── Mobile ── */
         .wv-mobile {
           display: none;
         }
@@ -405,22 +491,16 @@ export function WeekView({ events }: WeekViewProps) {
           margin: 0;
         }
 
-        .wv-mobile-event {
-          display: block;
-          background: rgba(215, 185, 127, 0.1);
-          border: 1px solid rgba(215, 185, 127, 0.2);
-          border-radius: 12px;
-          padding: 12px 14px;
-          text-decoration: none;
+        :global(a.wv-mobile-event) {
           margin-bottom: 8px;
         }
 
-        .wv-mobile-event .wv-event-title {
+        :global(a.wv-mobile-event) .wv-event-title {
           font-size: 0.95rem;
           white-space: normal;
         }
 
-        .wv-mobile-event .wv-event-meta {
+        :global(a.wv-mobile-event) .wv-event-meta {
           font-size: 0.82rem;
           margin-top: 4px;
         }

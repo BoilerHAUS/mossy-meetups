@@ -1,5 +1,6 @@
 import { getServerSession } from "next-auth/next";
 import type { GetServerSideProps, InferGetServerSidePropsType } from "next";
+import Link from "next/link";
 import { FormEvent, useState } from "react";
 
 import { useEffect } from "react";
@@ -11,7 +12,9 @@ import { AppShell } from "../components/AppShell";
 import { EventCard, type EventCardEvent } from "../components/EventCard";
 import { GroupCard } from "../components/GroupCard";
 import { DatePicker } from "../components/DatePicker";
+import { MonthView, type MonthEvent } from "../components/MonthView";
 import { WeekView, type WeekEvent } from "../components/WeekView";
+import { LocationVoteCard, type LocationVoteCardEvent } from "../components/LocationVoteCard";
 import { TbdEventCard, type TbdEventCardEvent } from "../components/TbdEventCard";
 import type { RSVPStatus } from "../components/RSVPButton";
 import { Tooltip } from "../components/Tooltip";
@@ -88,7 +91,7 @@ export default function Home({ databaseReady, databaseMessage, groups, upcomingE
   const [localTbd] = useState(tbdEvents);
 
   // Event view mode
-  const [viewMode, setViewMode] = useState<"week" | "list">("week");
+  const [viewMode, setViewMode] = useState<"list" | "week" | "month">("list");
 
   function handleRsvpChange(eventId: string, newStatus: RSVPStatus, hadPreviousRsvp: boolean) {
     setLocalUpcoming((prev) =>
@@ -249,7 +252,23 @@ export default function Home({ databaseReady, databaseMessage, groups, upcomingE
         )
       : localUpcoming;
 
-  const scheduledEvents: WeekEvent[] = filteredUpcoming.map((e) => ({
+  const locationVoteEvents = filteredUpcoming.filter(
+    (event) => !event.location && event.locationOptionCount > 0
+  );
+
+  const scheduledUpcoming = filteredUpcoming.filter(
+    (event) => !(event.locationOptionCount > 0 && !event.location)
+  );
+
+  const scheduledEvents: WeekEvent[] = scheduledUpcoming.map((e) => ({
+    id: e.id,
+    title: e.title,
+    groupName: e.groupName,
+    arrivalDate: e.arrivalDate as string,
+    location: e.location,
+  }));
+
+  const monthEvents: MonthEvent[] = scheduledUpcoming.map((e) => ({
     id: e.id,
     title: e.title,
     groupName: e.groupName,
@@ -460,6 +479,13 @@ export default function Home({ databaseReady, databaseMessage, groups, upcomingE
                 <div className="view-toggle">
                   <button
                     type="button"
+                    className={`view-btn ${viewMode === "list" ? "view-btn--active" : ""}`}
+                    onClick={() => setViewMode("list")}
+                  >
+                    List
+                  </button>
+                  <button
+                    type="button"
                     className={`view-btn ${viewMode === "week" ? "view-btn--active" : ""}`}
                     onClick={() => setViewMode("week")}
                   >
@@ -467,10 +493,10 @@ export default function Home({ databaseReady, databaseMessage, groups, upcomingE
                   </button>
                   <button
                     type="button"
-                    className={`view-btn ${viewMode === "list" ? "view-btn--active" : ""}`}
-                    onClick={() => setViewMode("list")}
+                    className={`view-btn ${viewMode === "month" ? "view-btn--active" : ""}`}
+                    onClick={() => setViewMode("month")}
                   >
-                    List
+                    Month
                   </button>
                 </div>
                 <div className="view-toggle">
@@ -495,18 +521,25 @@ export default function Home({ databaseReady, databaseMessage, groups, upcomingE
                     My RSVPs
                   </button>
                 </div>
+                {scheduledUpcoming.length > 0 ? (
+                  <Link href="/api/events/ics" className="export-btn">
+                    Export all events
+                  </Link>
+                ) : null}
               </div>
             </div>
 
-            {filteredUpcoming.length === 0 ? (
+            {scheduledUpcoming.length === 0 ? (
               <p className="empty-state">
-                {rsvpFilter === "mine" ? "No events you've responded to yet." : "No confirmed events yet."}
+                {locationVoteEvents.length > 0
+                  ? "Confirmed dates are waiting on location votes."
+                  : rsvpFilter === "mine"
+                  ? "No events you've responded to yet."
+                  : "No confirmed events yet."}
               </p>
-            ) : viewMode === "week" ? (
-              <WeekView events={scheduledEvents} />
-            ) : (
+            ) : viewMode === "list" ? (
               <div className="event-list">
-                {filteredUpcoming.map((event) => (
+                {scheduledUpcoming.map((event) => (
                   <EventCard
                     key={event.id}
                     event={event as EventCardEvent}
@@ -517,6 +550,10 @@ export default function Home({ databaseReady, databaseMessage, groups, upcomingE
                   />
                 ))}
               </div>
+            ) : viewMode === "week" ? (
+              <WeekView events={scheduledEvents} />
+            ) : (
+              <MonthView events={monthEvents} />
             )}
           </section>
 
@@ -534,6 +571,25 @@ export default function Home({ databaseReady, databaseMessage, groups, upcomingE
                   <TbdEventCard
                     key={event.id}
                     event={event as TbdEventCardEvent}
+                  />
+                ))}
+              </div>
+            </section>
+          ) : null}
+
+          {locationVoteEvents.length > 0 ? (
+            <section className="panel">
+              <div className="panel-heading">
+                <div>
+                  <p className="panel-label">Needs a location</p>
+                  <h2>Vote on where to go</h2>
+                </div>
+              </div>
+              <div className="event-list">
+                {locationVoteEvents.map((event) => (
+                  <LocationVoteCard
+                    key={event.id}
+                    event={event as LocationVoteCardEvent}
                   />
                 ))}
               </div>
@@ -849,6 +905,7 @@ export default function Home({ databaseReady, databaseMessage, groups, upcomingE
           display: flex;
           gap: 4px;
           flex-shrink: 0;
+          flex-wrap: wrap;
         }
 
         .view-btn {
@@ -871,6 +928,28 @@ export default function Home({ databaseReady, databaseMessage, groups, upcomingE
           background: rgba(215, 185, 127, 0.2);
           border-color: #d7b97f;
           color: #f4dcb0;
+        }
+
+        .export-btn {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 34px;
+          padding: 0 14px;
+          border-radius: 999px;
+          border: 1px solid rgba(215, 185, 127, 0.3);
+          background: rgba(255, 255, 255, 0.04);
+          color: #f4dcb0;
+          text-decoration: none;
+          font-size: 0.78rem;
+          font-weight: 600;
+          transition: border-color 0.15s, background 0.15s, color 0.15s;
+        }
+
+        .export-btn:hover {
+          border-color: rgba(215, 185, 127, 0.5);
+          background: rgba(215, 185, 127, 0.12);
+          color: #fff1d2;
         }
 
         .form-grid {

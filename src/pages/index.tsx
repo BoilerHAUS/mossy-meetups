@@ -37,7 +37,6 @@ import { LogoMark } from "../components/Logo";
 
 type Props = InferGetServerSidePropsType<typeof getServerSideProps>;
 
-const initialGroupForm = { name: "" };
 const initialEventForm = {
   groupId: "",
   title: "",
@@ -75,19 +74,6 @@ function formatDate(value: string | null) {
 }
 
 export default function Home({ databaseReady, databaseMessage, groups, upcomingEvents, tbdEvents, userId }: Props) {
-  const creatableGroups = groups.filter((group) => group.isAdmin || group.isMember);
-  const [groupForm, setGroupForm] = useState(initialGroupForm);
-  const [eventForm, setEventForm] = useState({
-    ...initialEventForm,
-    groupId: creatableGroups[0]?.id || "",
-  });
-  const [groupState, setGroupState] = useState<{ loading: boolean; error: string | null }>({ loading: false, error: null });
-  const [eventState, setEventState] = useState<{ loading: boolean; error: string | null }>({ loading: false, error: null });
-
-  // Create modals
-  const [createEventOpen, setCreateEventOpen] = useState(false);
-  const [createGroupOpen, setCreateGroupOpen] = useState(false);
-
   // Edit modal
   const [editingType, setEditingType] = useState<"event" | "group" | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -104,7 +90,7 @@ export default function Home({ databaseReady, databaseMessage, groups, upcomingE
   const [localUpcoming, setLocalUpcoming] = useState(upcomingEvents);
   const [localTbd] = useState(tbdEvents);
 
-  const [viewMode, setViewMode] = useState<"list" | "week" | "month">("list");
+  const [viewMode, setViewMode] = useState<"list" | "week" | "month">("month");
 
   function handleRsvpChange(eventId: string, newStatus: RSVPStatus, hadPreviousRsvp: boolean) {
     setLocalUpcoming((prev) =>
@@ -208,56 +194,6 @@ export default function Home({ databaseReady, databaseMessage, groups, upcomingE
     window.location.reload();
   }
 
-  async function handleGroupSubmit(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setGroupState({ loading: true, error: null });
-    const res = await fetch("/api/groups", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(groupForm),
-    });
-    if (!res.ok) {
-      const payload = await res.json().catch(() => ({ error: "Failed to create group" }));
-      setGroupState({ loading: false, error: payload.error || "Failed to create group" });
-      return;
-    }
-    setGroupForm(initialGroupForm);
-    setCreateGroupOpen(false);
-    window.location.reload();
-  }
-
-  async function handleEventSubmit(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-
-    if (eventForm.location.trim() && eventForm.locationOptions.trim()) {
-      setEventState({
-        loading: false,
-        error: "Choose either a confirmed location or comma-separated location vote options",
-      });
-      return;
-    }
-
-    if (hasTooManyLocationOptions(eventForm.locationOptions)) {
-      setEventState({ loading: false, error: "You can add up to 4 location vote options" });
-      return;
-    }
-
-    setEventState({ loading: true, error: null });
-    const res = await fetch("/api/events", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(eventForm),
-    });
-    if (!res.ok) {
-      const payload = await res.json().catch(() => ({ error: "Failed to create event" }));
-      setEventState({ loading: false, error: payload.error || "Failed to create event" });
-      return;
-    }
-    setEventForm({ ...initialEventForm, groupId: creatableGroups[0]?.id || "" });
-    setCreateEventOpen(false);
-    window.location.reload();
-  }
-
   const sidebarGroups = groups.map((g) => ({ id: g.id, name: g.name }));
 
   const filteredUpcoming =
@@ -316,19 +252,11 @@ export default function Home({ databaseReady, databaseMessage, groups, upcomingE
           </div>
         </div>
         <div className="hero-actions">
-          <Button
-            variant="ghost"
-            onClick={() => setCreateGroupOpen(true)}
-          >
-            + New Group
+          <Button asChild variant="ghost">
+            <Link href="/groups/new">+ New Group</Link>
           </Button>
-          <Button
-            variant="primary"
-            onClick={() => setCreateEventOpen(true)}
-            disabled={creatableGroups.length === 0}
-            title={creatableGroups.length === 0 ? "Join or create a group first" : undefined}
-          >
-            + New Event
+          <Button asChild variant="primary">
+            <Link href="/events/new">+ New Event</Link>
           </Button>
         </div>
       </section>
@@ -352,50 +280,30 @@ export default function Home({ databaseReady, databaseMessage, groups, upcomingE
             <h2>What&apos;s on the calendar</h2>
           </div>
           <div className="panel-controls">
-            <div className="view-toggle">
-              <button
-                type="button"
-                className={`view-btn ${viewMode === "list" ? "view-btn--active" : ""}`}
-                onClick={() => setViewMode("list")}
-              >
-                List
-              </button>
-              <button
-                type="button"
-                className={`view-btn ${viewMode === "week" ? "view-btn--active" : ""}`}
-                onClick={() => setViewMode("week")}
-              >
-                Week
-              </button>
-              <button
-                type="button"
-                className={`view-btn ${viewMode === "month" ? "view-btn--active" : ""}`}
-                onClick={() => setViewMode("month")}
-              >
-                Month
-              </button>
+            <div className="view-toggle-row">
+              {(["list", "week", "month"] as const).map((mode) => (
+                <Button
+                  key={mode}
+                  variant={viewMode === mode ? "primary" : "ghost"}
+                  onClick={() => setViewMode(mode)}
+                >
+                  {mode.charAt(0).toUpperCase() + mode.slice(1)}
+                </Button>
+              ))}
             </div>
-            <div className="view-toggle">
-              <button
-                type="button"
-                className={`view-btn ${rsvpFilter === "all" ? "view-btn--active" : ""}`}
-                onClick={() => {
-                  setRsvpFilter("all");
-                  localStorage.setItem("rsvpFilter", "all");
-                }}
+            <div className="view-toggle-row">
+              <Button
+                variant={rsvpFilter === "all" ? "primary" : "ghost"}
+                onClick={() => { setRsvpFilter("all"); localStorage.setItem("rsvpFilter", "all"); }}
               >
                 All
-              </button>
-              <button
-                type="button"
-                className={`view-btn ${rsvpFilter === "mine" ? "view-btn--active" : ""}`}
-                onClick={() => {
-                  setRsvpFilter("mine");
-                  localStorage.setItem("rsvpFilter", "mine");
-                }}
+              </Button>
+              <Button
+                variant={rsvpFilter === "mine" ? "primary" : "ghost"}
+                onClick={() => { setRsvpFilter("mine"); localStorage.setItem("rsvpFilter", "mine"); }}
               >
                 My RSVPs
-              </button>
+              </Button>
             </div>
             {scheduledUpcoming.length > 0 ? (
               <CalendarExportButton href="/api/events/ics" label="Export all events" />
@@ -412,9 +320,9 @@ export default function Home({ databaseReady, databaseMessage, groups, upcomingE
                 ? "No events you've responded to yet."
                 : "No confirmed events yet."}
             </p>
-            {rsvpFilter !== "mine" && creatableGroups.length > 0 ? (
-              <Button variant="primary" onClick={() => setCreateEventOpen(true)}>
-                + Schedule the first event
+            {rsvpFilter !== "mine" ? (
+              <Button asChild variant="primary">
+                <Link href="/events/new">+ Schedule the first event</Link>
               </Button>
             ) : null}
           </div>
@@ -485,8 +393,8 @@ export default function Home({ databaseReady, databaseMessage, groups, upcomingE
             <p className="panel-label">Groups</p>
             <h2>Current meetup hosts</h2>
           </div>
-          <Button variant="ghost" onClick={() => setCreateGroupOpen(true)}>
-            + New Group
+          <Button asChild variant="ghost">
+            <Link href="/groups/new">+ New Group</Link>
           </Button>
         </div>
         {groups.length === 0 ? (
@@ -505,180 +413,6 @@ export default function Home({ databaseReady, databaseMessage, groups, upcomingE
           </div>
         )}
       </section>
-
-      {/* ── Create Event Modal ── */}
-      <Dialog open={createEventOpen} onOpenChange={setCreateEventOpen}>
-        <DialogContent>
-          <DialogTitle>
-            <span className="modal-label">New event</span>
-            Schedule the next meetup
-          </DialogTitle>
-          <form className="form-grid" onSubmit={handleEventSubmit}>
-            <div className="field">
-              <Label htmlFor="ce-group">Group</Label>
-              <select
-                id="ce-group"
-                className="native-select"
-                value={eventForm.groupId}
-                onChange={(e) => setEventForm((f) => ({ ...f, groupId: e.target.value }))}
-                disabled={creatableGroups.length === 0}
-                required
-              >
-                <option value="">Select a group</option>
-                {creatableGroups.map((g) => (
-                  <option key={g.id} value={g.id}>{g.name}</option>
-                ))}
-              </select>
-              <span className="field-hint">
-                {creatableGroups.length === 0
-                  ? "Join a group first, or create one of your own, before posting an event."
-                  : "Only groups you've joined can be used for new events."}
-              </span>
-            </div>
-            <div className="field">
-              <Label htmlFor="ce-title" required>Event title</Label>
-              <Input
-                id="ce-title"
-                value={eventForm.title}
-                onChange={(e) => setEventForm((f) => ({ ...f, title: e.target.value }))}
-                placeholder="Friday campfire set"
-                required
-              />
-            </div>
-            <div className="field">
-              <Label htmlFor="ce-desc">Description</Label>
-              <Textarea
-                id="ce-desc"
-                value={eventForm.description}
-                onChange={(e) => setEventForm((f) => ({ ...f, description: e.target.value }))}
-                placeholder="Casual acoustic set and shared snacks."
-                rows={2}
-              />
-            </div>
-            <div className="field">
-              <Label htmlFor="ce-location">Location</Label>
-              <Input
-                id="ce-location"
-                value={eventForm.location}
-                onChange={(e) => setEventForm((f) => ({ ...f, location: e.target.value }))}
-                placeholder="North Grove"
-              />
-            </div>
-            <div className="field">
-              <Label htmlFor="ce-locopts">Location vote options</Label>
-              <Input
-                id="ce-locopts"
-                value={eventForm.locationOptions}
-                onChange={(e) => setEventForm((f) => ({ ...f, locationOptions: e.target.value }))}
-                placeholder="Turtle Dunes, Pine Ridge, North Grove"
-                helperText="Optional. Separate with commas. Leave Location blank if the group should vote."
-              />
-            </div>
-            <div className="field">
-              <Label htmlFor="ce-maplink">Map link</Label>
-              <Input
-                id="ce-maplink"
-                type="url"
-                value={eventForm.mapLink}
-                onChange={(e) => setEventForm((f) => ({ ...f, mapLink: e.target.value }))}
-                placeholder="https://maps.google.com/…"
-              />
-            </div>
-            <div className="field">
-              <Label htmlFor="ce-mapembed">Map embed</Label>
-              <Input
-                id="ce-mapembed"
-                value={eventForm.mapEmbed}
-                onChange={(e) =>
-                  setEventForm((f) => ({ ...f, mapEmbed: extractMapEmbedSrc(e.target.value) }))
-                }
-                placeholder="Paste Google Maps embed code or src= URL"
-                helperText="Google Maps → Share → Embed a map → paste the full code or just the src= URL"
-              />
-            </div>
-            <div className="date-grid">
-              <DatePicker
-                label="Arrival"
-                value={eventForm.arrivalDate}
-                onChange={(v) => setEventForm((f) => ({ ...f, arrivalDate: v }))}
-                placeholder="TBD — leave blank to vote later"
-              />
-              <div className="field">
-                <Label htmlFor="ce-nights">
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
-                    How many nights?
-                    <Tooltip
-                      text="Departure date is calculated automatically as arrival + nights. Applies to each date proposal in the voting grid too."
-                      position="top"
-                      maxWidth={240}
-                    >
-                      <span aria-label="Help" style={{ cursor: "help", fontSize: "0.8rem", color: "var(--text-dim)", lineHeight: 1 }}>ⓘ</span>
-                    </Tooltip>
-                  </span>
-                </Label>
-                <Input
-                  id="ce-nights"
-                  type="number"
-                  min="1"
-                  max="30"
-                  value={eventForm.nights}
-                  onChange={(e) => setEventForm((f) => ({ ...f, nights: e.target.value }))}
-                  placeholder="e.g. 3"
-                />
-              </div>
-            </div>
-            <div className="checkbox-row">
-              <Checkbox
-                id="ce-potluck"
-                checked={eventForm.isPotluck}
-                onCheckedChange={(v) => setEventForm((f) => ({ ...f, isPotluck: v === true }))}
-              />
-              <Label htmlFor="ce-potluck">Potluck — everyone brings a dish</Label>
-            </div>
-            {eventState.error ? <p className="form-error">{eventState.error}</p> : null}
-            <DialogFooter>
-              <DialogClose asChild>
-                <Button variant="secondary">Cancel</Button>
-              </DialogClose>
-              <Button type="submit" variant="primary" disabled={eventState.loading || creatableGroups.length === 0}>
-                {eventState.loading ? "Creating…" : "Create event"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-
-      {/* ── Create Group Modal ── */}
-      <Dialog open={createGroupOpen} onOpenChange={setCreateGroupOpen}>
-        <DialogContent>
-          <DialogTitle>
-            <span className="modal-label">New group</span>
-            Set up a host group
-          </DialogTitle>
-          <form className="form-grid" onSubmit={handleGroupSubmit}>
-            <div className="field">
-              <Label htmlFor="cg-name" required>Group name</Label>
-              <Input
-                id="cg-name"
-                value={groupForm.name}
-                onChange={(e) => setGroupForm((f) => ({ ...f, name: e.target.value }))}
-                placeholder="Boilerhaus Camp Crew"
-                required
-                autoFocus
-              />
-            </div>
-            {groupState.error ? <p className="form-error">{groupState.error}</p> : null}
-            <DialogFooter>
-              <DialogClose asChild>
-                <Button variant="secondary">Cancel</Button>
-              </DialogClose>
-              <Button type="submit" variant="primary" disabled={groupState.loading}>
-                {groupState.loading ? "Creating…" : "Create group"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
 
       {/* ── Edit Event Modal ── */}
       <Dialog open={editingType === "event" && editingId !== null} onOpenChange={(open) => { if (!open) closeModal(); }}>
@@ -956,31 +690,11 @@ export default function Home({ databaseReady, databaseMessage, groups, upcomingE
           flex-shrink: 0;
         }
 
-        .view-toggle {
+        .view-toggle-row {
           display: flex;
           gap: 4px;
           flex-shrink: 0;
           flex-wrap: wrap;
-        }
-
-        .view-btn {
-          font-family: inherit;
-          font-size: 0.78rem;
-          padding: 5px 10px;
-          border-radius: var(--radius-pill);
-          border: 1px solid var(--border-strong);
-          background: transparent;
-          color: var(--text-muted);
-          cursor: pointer;
-          transition: border-color 0.15s, color 0.15s, background 0.15s;
-        }
-
-        .view-btn:hover { border-color: var(--accent); color: var(--text); }
-
-        .view-btn--active {
-          background: rgba(215, 185, 127, 0.18);
-          border-color: var(--accent);
-          color: var(--accent-hover);
         }
 
         /* ── Empty state ── */

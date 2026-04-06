@@ -11,7 +11,9 @@
       "Bash(npm view:*)",
       "Bash(node -e \"const p = require\\('./package.json'\\); console.log\\('next:', p.dependencies.next, 'react:', p.dependencies.react\\)\")",
       "Bash(ls /home/boilerrat/mossy-meetups/next.config*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(python3 -c \"import json,sys; p=json.load\\(sys.stdin\\); print\\(json.dumps\\({k:p[k] for k in ['main','module','exports','browser'] if k in p}, indent=2\\)\\)\")",
+      "Bash(xargs cat:*)"
     ]
   }
 }

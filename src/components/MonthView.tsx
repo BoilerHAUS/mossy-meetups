@@ -124,9 +124,9 @@ export function MonthView({ events }: MonthViewProps) {
         .mv-arrow {
           font-family: inherit;
           font-size: 1rem;
-          background: rgba(243, 235, 220, 0.07);
+          background: var(--bg-input);
           border: 0;
-          color: #c9c2b3;
+          color: var(--text-muted);
           border-radius: 8px;
           padding: 4px 10px;
           cursor: pointer;
@@ -134,7 +134,7 @@ export function MonthView({ events }: MonthViewProps) {
 
         .mv-label {
           font-size: 0.95rem;
-          color: #d4d0c7;
+          color: var(--text);
           font-weight: 600;
         }
 
@@ -146,7 +146,7 @@ export function MonthView({ events }: MonthViewProps) {
           text-transform: uppercase;
           letter-spacing: 0.08em;
           font-size: 0.68rem;
-          color: #8a847a;
+          color: var(--text-dim);
         }
 
         .mv-grid {
@@ -157,10 +157,10 @@ export function MonthView({ events }: MonthViewProps) {
 
         .mv-day {
           min-height: 116px;
-          border: 1px solid rgba(243, 235, 220, 0.08);
+          border: 1px solid var(--border);
           border-radius: 14px;
           padding: 8px;
-          background: rgba(255, 255, 255, 0.02);
+          background: transparent;
           display: flex;
           flex-direction: column;
           gap: 6px;
@@ -171,14 +171,14 @@ export function MonthView({ events }: MonthViewProps) {
         }
 
         .mv-day--today {
-          border-color: rgba(215, 185, 127, 0.32);
-          box-shadow: inset 0 0 0 1px rgba(215, 185, 127, 0.12);
+          border-color: var(--border-focus);
+          box-shadow: inset 0 0 0 1px var(--border-focus);
         }
 
         .mv-day-num {
           font-size: 0.82rem;
           font-weight: 700;
-          color: #f3ebdc;
+          color: var(--text);
         }
 
         .mv-events {
@@ -193,14 +193,14 @@ export function MonthView({ events }: MonthViewProps) {
           text-decoration: none;
           border-radius: 8px;
           padding: 5px 7px;
-          background: rgba(215, 185, 127, 0.1);
-          border: 1px solid rgba(215, 185, 127, 0.16);
+          background: var(--border);
+          border: 1px solid var(--border-strong);
         }
 
         .mv-event-title {
           display: block;
           font-size: 0.72rem;
-          color: #f4dcb0;
+          color: var(--text);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -208,7 +208,7 @@ export function MonthView({ events }: MonthViewProps) {
 
         .mv-more {
           font-size: 0.7rem;
-          color: #8a847a;
+          color: var(--text-dim);
         }
 
         @media (max-width: 768px) {

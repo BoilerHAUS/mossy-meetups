@@ -14,7 +14,6 @@ import {
   DialogTitle,
   Input,
   Label,
-  Stat,
   Textarea,
 } from "@boilerhaus-ui/boilerhaus-ui";
 
@@ -258,13 +257,20 @@ export default function Home({ databaseReady, databaseMessage, groups, upcomingE
 
       {/* Stats */}
       <section className="stats-grid">
-        <Stat label="Groups" value={groups.length} />
-        <Stat label="Upcoming events" value={localUpcoming.length} />
-        <Stat
-          label="Next meetup"
-          value={nextMeetup ? formatDate(nextMeetup.arrivalDate) : "None scheduled"}
-          suppressHydrationWarning
-        />
+        <div className="stat-card">
+          <span className="stat-label">Groups</span>
+          <span className="stat-value">{groups.length}</span>
+        </div>
+        <div className="stat-card">
+          <span className="stat-label">Upcoming events</span>
+          <span className="stat-value">{localUpcoming.length}</span>
+        </div>
+        <div className="stat-card" suppressHydrationWarning>
+          <span className="stat-label">Next meetup</span>
+          <span className="stat-value">
+            {nextMeetup ? formatDate(nextMeetup.arrivalDate) : "None scheduled"}
+          </span>
+        </div>
       </section>
 
       {/* ── PRIMARY: Events calendar ── */}
@@ -641,8 +647,36 @@ export default function Home({ databaseReady, databaseMessage, groups, upcomingE
           margin-bottom: 16px;
         }
 
+        .stat-card {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+          padding: 16px 20px;
+          background: var(--bg-card);
+          border: 1px solid var(--border);
+          border-radius: var(--radius-card);
+          backdrop-filter: blur(10px);
+        }
+
+        .stat-label {
+          font-size: 0.72rem;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.1em;
+          color: var(--text-dim);
+        }
+
+        .stat-value {
+          font-family: var(--font-display);
+          font-size: 1.5rem;
+          font-weight: 700;
+          color: var(--text);
+          line-height: 1.1;
+        }
+
         @media (max-width: 640px) {
           .stats-grid { grid-template-columns: 1fr 1fr; }
+          .stat-value { font-size: 1.2rem; }
         }
 
         /* ── Panels ── */

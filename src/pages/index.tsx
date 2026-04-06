@@ -14,8 +14,6 @@ import {
   DialogTitle,
   Input,
   Label,
-  Radio,
-  RadioGroup,
   Stat,
   Textarea,
 } from "@boilerhaus-ui/boilerhaus-ui";
@@ -277,27 +275,33 @@ export default function Home({ databaseReady, databaseMessage, groups, upcomingE
             <h2>What&apos;s on the calendar</h2>
           </div>
           <div className="panel-controls">
-            <RadioGroup
-              orientation="horizontal"
-              value={viewMode}
-              onValueChange={(v) => setViewMode(v as typeof viewMode)}
-            >
-              <Radio value="list" label="List" />
-              <Radio value="week" label="Week" />
-              <Radio value="month" label="Month" />
-            </RadioGroup>
+            <div className="seg-group" role="group" aria-label="View mode">
+              {(["list", "week", "month"] as const).map((mode) => (
+                <button
+                  key={mode}
+                  type="button"
+                  className={`seg-btn${viewMode === mode ? " seg-btn--active" : ""}`}
+                  onClick={() => setViewMode(mode)}
+                  aria-pressed={viewMode === mode}
+                >
+                  {mode.charAt(0).toUpperCase() + mode.slice(1)}
+                </button>
+              ))}
+            </div>
             <div className="controls-sep" />
-            <RadioGroup
-              orientation="horizontal"
-              value={rsvpFilter}
-              onValueChange={(v) => {
-                setRsvpFilter(v as typeof rsvpFilter);
-                localStorage.setItem("rsvpFilter", v);
-              }}
-            >
-              <Radio value="all" label="All" />
-              <Radio value="mine" label="My RSVPs" />
-            </RadioGroup>
+            <div className="seg-group" role="group" aria-label="RSVP filter">
+              {(["all", "mine"] as const).map((f) => (
+                <button
+                  key={f}
+                  type="button"
+                  className={`seg-btn${rsvpFilter === f ? " seg-btn--active" : ""}`}
+                  onClick={() => { setRsvpFilter(f); localStorage.setItem("rsvpFilter", f); }}
+                  aria-pressed={rsvpFilter === f}
+                >
+                  {f === "all" ? "All" : "My RSVPs"}
+                </button>
+              ))}
+            </div>
             {scheduledUpcoming.length > 0 ? (
               <>
                 <div className="controls-sep" />
@@ -686,6 +690,43 @@ export default function Home({ databaseReady, databaseMessage, groups, upcomingE
           width: 100%;
           height: 1px;
           background: var(--border);
+          margin: 2px 0;
+        }
+
+        .seg-group {
+          display: inline-flex;
+          border: 1px solid var(--border-strong);
+          border-radius: var(--radius-pill);
+          overflow: hidden;
+        }
+
+        .seg-btn {
+          font-family: inherit;
+          font-size: 0.78rem;
+          font-weight: 500;
+          padding: 5px 14px;
+          background: transparent;
+          border: none;
+          border-left: 1px solid var(--border-strong);
+          color: var(--text-muted);
+          cursor: pointer;
+          transition: background 0.15s, color 0.15s;
+          white-space: nowrap;
+        }
+
+        .seg-btn:first-child {
+          border-left: none;
+        }
+
+        .seg-btn:hover:not(.seg-btn--active) {
+          background: var(--border);
+          color: var(--text);
+        }
+
+        .seg-btn--active {
+          background: var(--accent);
+          color: var(--accent-text);
+          font-weight: 600;
         }
 
         /* ── Empty state ── */

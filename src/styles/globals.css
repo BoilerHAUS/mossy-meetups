@@ -82,6 +82,9 @@
   --color-smoke: #c9c2b3;
   --color-rule:  rgba(243, 235, 220, 0.12);
   --color-ash:   #0d1c17;
+
+  /* Input background — solid enough to be clearly visible on the gradient bg */
+  --bg-input:    #0b1a14;
 }
 
 /* ── Light theme ── */
@@ -183,4 +186,47 @@ body {
 .btn-sm {
   font-size: 0.78rem;
   padding: 5px 12px;
+}
+
+/* ── Form element base styles ── */
+/* Override boilerhaus-ui's bg-paper Tailwind class which may not land correctly */
+input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]),
+textarea,
+select {
+  background-color: var(--bg-input) !important;
+  color: var(--text);
+  font-size: 0.875rem;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-dim);
+  font-size: 0.875rem;
+}
+
+/* ── Custom checkbox ── */
+.custom-checkbox {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  border: 2px solid var(--border-strong);
+  border-radius: 4px;
+  background: var(--bg-input);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  background-image: none;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 11px;
+}
+.custom-checkbox:checked {
+  background-color: var(--accent);
+  border-color: var(--accent);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3 8l3.5 3.5L13 4' stroke='%2310231d' stroke-width='2.2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+.custom-checkbox:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
 }

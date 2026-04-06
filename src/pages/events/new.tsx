@@ -4,11 +4,8 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { FormEvent, useState } from "react";
 import {
-  Checkbox,
   Input,
   Label,
-  Select,
-  SelectItem,
   Textarea,
   Tooltip,
   TooltipContent,
@@ -124,16 +121,16 @@ export default function NewEventPage({ groups, sidebarGroups }: Props) {
           <form className="form-body" onSubmit={handleSubmit}>
             <div className="field">
               <Label htmlFor="ev-group">Group</Label>
-              <Select
+              <select
                 id="ev-group"
                 value={form.groupId}
-                onValueChange={(v) => setForm((f) => ({ ...f, groupId: v }))}
-                placeholder="Select a group"
+                onChange={(e) => setForm((f) => ({ ...f, groupId: e.target.value }))}
+                className="custom-select"
               >
                 {groups.map((g) => (
-                  <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>
+                  <option key={g.id} value={g.id}>{g.name}</option>
                 ))}
-              </Select>
+              </select>
               <span className="field-hint">Only groups you&apos;ve joined can host events.</span>
             </div>
 
@@ -248,10 +245,12 @@ export default function NewEventPage({ groups, sidebarGroups }: Props) {
             </div>
 
             <div className="checkbox-row">
-              <Checkbox
+              <input
+                type="checkbox"
                 id="ev-potluck"
                 checked={form.isPotluck}
-                onCheckedChange={(v) => setForm((f) => ({ ...f, isPotluck: v === true }))}
+                onChange={(e) => setForm((f) => ({ ...f, isPotluck: e.target.checked }))}
+                className="custom-checkbox"
               />
               <Label htmlFor="ev-potluck">Potluck — everyone brings a dish</Label>
             </div>
@@ -330,6 +329,34 @@ export default function NewEventPage({ groups, sidebarGroups }: Props) {
           font-size: 0.8rem;
           color: var(--text-dim);
         }
+
+        .custom-select {
+          width: 100%;
+          padding: 9px 14px;
+          background: var(--bg-input);
+          color: var(--text);
+          border: 1px solid var(--border-strong);
+          border-radius: var(--radius-input);
+          font-family: inherit;
+          font-size: 0.9rem;
+          cursor: pointer;
+          appearance: none;
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238a847a' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+          background-repeat: no-repeat;
+          background-position: right 14px center;
+          padding-right: 36px;
+        }
+        .custom-select:focus {
+          outline: 2px solid var(--border-focus);
+          outline-offset: 2px;
+          border-color: var(--border-focus);
+        }
+        .custom-select option {
+          background: #10231d;
+          color: #f3ebdc;
+        }
+
+        /* .custom-checkbox is defined in globals.css */
 
         .checkbox-row {
           display: flex;

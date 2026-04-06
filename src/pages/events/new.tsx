@@ -157,91 +157,88 @@ export default function NewEventPage({ groups, sidebarGroups }: Props) {
               />
             </div>
 
-            <div className="two-col">
-              <div className="field">
-                <Label htmlFor="ev-location">Location</Label>
-                <Input
-                  id="ev-location"
-                  value={form.location}
-                  onChange={(e) => setForm((f) => ({ ...f, location: e.target.value }))}
-                  placeholder="North Grove"
-                />
-              </div>
-              <div className="field">
-                <Label htmlFor="ev-locopts">Location vote options</Label>
-                <Input
-                  id="ev-locopts"
-                  value={form.locationOptions}
-                  onChange={(e) => setForm((f) => ({ ...f, locationOptions: e.target.value }))}
-                  placeholder="Turtle Dunes, Pine Ridge…"
-                />
-                <span className="field-hint">Comma-separated. Leave Location blank to let the group vote.</span>
-              </div>
-            </div>
-
-            <div className="two-col">
-              <div className="field">
-                <Label htmlFor="ev-maplink">Map link</Label>
-                <Input
-                  id="ev-maplink"
-                  type="url"
-                  value={form.mapLink}
-                  onChange={(e) => setForm((f) => ({ ...f, mapLink: e.target.value }))}
-                  placeholder="https://maps.google.com/…"
-                />
-              </div>
-              <div className="field">
-                <Label htmlFor="ev-mapembed">Map embed</Label>
-                <Input
-                  id="ev-mapembed"
-                  value={form.mapEmbed}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, mapEmbed: extractMapEmbedSrc(e.target.value) }))
-                  }
-                  placeholder="Paste Google Maps embed code"
-                />
-                <span className="field-hint">Share → Embed a map → paste the code or src= URL</span>
-              </div>
-            </div>
-
-            <div className="two-col">
-              <DatePicker
-                label="Arrival"
-                value={form.arrivalDate}
-                onChange={(v) => setForm((f) => ({ ...f, arrivalDate: v }))}
-                placeholder="TBD — leave blank to vote later"
+            <div className="field">
+              <Label htmlFor="ev-location">Location</Label>
+              <Input
+                id="ev-location"
+                value={form.location}
+                onChange={(e) => setForm((f) => ({ ...f, location: e.target.value }))}
+                placeholder="North Grove"
               />
-              <div className="field">
-                <Label htmlFor="ev-nights">
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
-                    How many nights?
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <span
-                            aria-label="Help"
-                            style={{ cursor: "help", fontSize: "0.8rem", color: "var(--text-dim)", lineHeight: 1 }}
-                          >
-                            ⓘ
-                          </span>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          Departure date is calculated automatically as arrival + nights.
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </span>
-                </Label>
-                <Input
-                  id="ev-nights"
-                  type="number"
-                  min="1"
-                  max="30"
-                  value={form.nights}
-                  onChange={(e) => setForm((f) => ({ ...f, nights: e.target.value }))}
-                  placeholder="e.g. 3"
-                />
-              </div>
+            </div>
+
+            <div className="field">
+              <Label htmlFor="ev-locopts">Location vote options</Label>
+              <Input
+                id="ev-locopts"
+                value={form.locationOptions}
+                onChange={(e) => setForm((f) => ({ ...f, locationOptions: e.target.value }))}
+                placeholder="Turtle Dunes, Pine Ridge…"
+              />
+              <span className="field-hint">Comma-separated. Leave Location blank to let the group vote.</span>
+            </div>
+
+            <div className="field">
+              <Label htmlFor="ev-maplink">Map link</Label>
+              <Input
+                id="ev-maplink"
+                type="url"
+                value={form.mapLink}
+                onChange={(e) => setForm((f) => ({ ...f, mapLink: e.target.value }))}
+                placeholder="https://maps.google.com/…"
+              />
+            </div>
+
+            <div className="field">
+              <Label htmlFor="ev-mapembed">Map embed</Label>
+              <Input
+                id="ev-mapembed"
+                value={form.mapEmbed}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, mapEmbed: extractMapEmbedSrc(e.target.value) }))
+                }
+                placeholder="Paste Google Maps embed code"
+              />
+              <span className="field-hint">Share → Embed a map → paste the code or src= URL</span>
+            </div>
+
+            <DatePicker
+              label="Arrival"
+              value={form.arrivalDate}
+              onChange={(v) => setForm((f) => ({ ...f, arrivalDate: v }))}
+              placeholder="TBD — leave blank to vote later"
+            />
+
+            <div className="field">
+              <Label htmlFor="ev-nights">
+                <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                  How many nights?
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span
+                          aria-label="Help"
+                          style={{ cursor: "help", fontSize: "0.8rem", color: "var(--text-dim)", lineHeight: 1 }}
+                        >
+                          ⓘ
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        Departure date is calculated automatically as arrival + nights.
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </span>
+              </Label>
+              <Input
+                id="ev-nights"
+                type="number"
+                min="1"
+                max="30"
+                value={form.nights}
+                onChange={(e) => setForm((f) => ({ ...f, nights: e.target.value }))}
+                placeholder="e.g. 3"
+              />
             </div>
 
             <div className="checkbox-row">
@@ -318,13 +315,6 @@ export default function NewEventPage({ groups, sidebarGroups }: Props) {
           gap: 6px;
         }
 
-        .two-col {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 16px;
-          align-items: start;
-        }
-
         .field-hint {
           font-size: 0.8rem;
           color: var(--text-dim);
@@ -378,8 +368,7 @@ export default function NewEventPage({ groups, sidebarGroups }: Props) {
         }
 
         @media (max-width: 540px) {
-          .form-card { padding: 24px 20px; }
-          .two-col { grid-template-columns: 1fr; }
+          .form-card { padding: 24px 16px; }
         }
       `}</style>
     </AppShell>

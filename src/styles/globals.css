@@ -195,7 +195,8 @@ textarea,
 select {
   background-color: var(--bg-input) !important;
   color: var(--text);
-  font-size: 0.875rem;
+  font-size: 0.9rem;
+  min-height: 44px;
 }
 
 input::placeholder,
